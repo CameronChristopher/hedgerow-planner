@@ -521,7 +521,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   state.view = state.view || 'spacing'; state.icons = state.icons || {};
   state.tpls = state.tpls || [];
   function uid(){ return 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-  if(!state.seeded){ if(!state.hideExample) state.tpls.unshift(Object.assign({id:uid()}, EXAMPLE)); state.seeded = true; }
+  state.seeded = true; // new plans start with an empty plant menu
   state.tpls.forEach(function(t){ if(!t.id) t.id = uid(); });
   // the old diagonal Hatch pattern became Vertical
   function migratePatterns(){
@@ -700,7 +700,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var box = $('plants'); box.innerHTML = '';
     var all = [];
     state.tpls.forEach(function(t,i){ all.push({t:t, idx:i}); });
-    if(!all.length){ box.innerHTML = '<p class="sub">No plants in the menu. Add a custom circle and save it here, or upload a CSV.</p>'; return; }
+    if(!all.length){ box.innerHTML = '<p class="sub">No plants yet. Start with Add custom circle, or pick plants from Presets.</p>'; return; }
     LAYERS.forEach(function(l){
       var grp = all.filter(function(a){ return a.t.layer === l[0]; });
       if(!grp.length) return;
@@ -744,7 +744,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     return best || {x:state.w / 2, y:state.h / 2};
   }
-  $('addCustom').onclick = function(){ addItem({label:'Custom', d:3, color:'#117733', pattern:'dots', layer:'small'}); };
+  // highlight the starting point until it has been used once
+  if(!state.prefs.usedCustom) $('addCustom').classList.add('primary');
+  $('addCustom').onclick = function(){
+    if(!state.prefs.usedCustom){ state.prefs.usedCustom = true; this.classList.remove('primary'); }
+    addItem({label:'Custom', d:3, color:'#117733', pattern:'dots', layer:'small'});
+  };
   function tplData(it){ return {label:it.label, d:it.d, color:it.color, pattern:it.pattern, layer:it.layer, fs:it.fs||null, menu:it.menu||''}; }
   function flash(id, txt){ $(id).textContent = txt; setTimeout(renderEditor, 1300); }
   $('saveTpl').onclick = function(){

@@ -345,9 +345,10 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <fieldset class="mg"><legend>Grid</legend>
           <div class="mrow"><label for="gc">Square size</label><span class="mfield"><input type="number" id="gc" min="0.25" max="10" step="0.25"> ft</span></div>
           <div class="mrow"><label for="gm">Darker lines every</label><span class="mfield"><input type="number" id="gm" min="0.25" max="100" step="0.25"> ft</span></div>
-          <label class="mchk"><input type="checkbox" id="scOn"> Show scale bar</label>
         </fieldset>
-        <fieldset class="mg"><legend>Compass</legend>
+        <fieldset class="mg"><legend>Display options</legend>
+          <label class="mchk"><input type="checkbox" id="scOn"> Show scale bar</label>
+          <label class="mchk"><input type="checkbox" id="cnOn"> Show common names in key</label>
           <label class="mchk"><input type="checkbox" id="cpOn"> Show compass</label>
           <div class="mrow" id="northRow"><label for="cpDeg">North points</label><span class="mfield"><input type="number" id="cpDeg" min="0" max="359" step="1" aria-describedby="cpHelp"> ° clockwise</span>
           <span class="mhelp" id="cpHelp">0° means north is at the top of the diagram.</span></div>
@@ -495,6 +496,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         <li>Loading a saved layout now offers to add any of its plants that aren’t in your Add a plant menu, so you can place more of them and update them later.</li>
         <li>The planting area is now called the “block plan” throughout, instead of “bed.”</li>
         <li>Presets now has a “By plant characteristic” section under the Native Plant Salvage Foundation, with lists such as Pollinator-attracting, Larval hosts and Soil-binding, so you can pick plants by what they do in a hedgerow.</li>
+        <li>More options has a new Display options group with a “Show common names in key” switch. It’s off to start, so the key lists plants by scientific name; turn it on to include common names.</li>
+        <li>Scientific (Latin) plant names are now shown in italics in the plant menu, Presets, the key and exports.</li>
+        <li>Italics now recognize over 800 plant genera, not just the ones in Presets, so names you type like <i>Quercus garryana</i> are italicized automatically.</li>
       </ul>
     </section>
   </div>
@@ -561,7 +565,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   migratePatterns();
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} record(); }
   // ---- undo / redo ----
-  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','cell','major','scale','compass','north','opacity','autoOrder'];
+  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','cell','major','scale','commonNames','compass','north','opacity','autoOrder'];
   function planSnap(){ var o = {}; HKEYS.forEach(function(k){ o[k] = state[k]; }); return JSON.stringify(o); }
   function updUndo(){ var u = $('undo'), r = $('redo'); if(u) u.disabled = hIdx <= 0; if(r) r.disabled = hIdx >= hist.length - 1; }
   function record(){
@@ -738,7 +742,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         var t = a.t, r = document.createElement('div'); r.className = 'prow';
         var b = document.createElement('button'); b.className = 'plant';
         b.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="'+fillFor(t)+'" stroke="rgba(0,0,0,.4)"/></svg><span></span><small>'+t.d+' ft</small>';
-        b.children[1].textContent = (t.menu || t.label).replace(/\n/g,' ');
+        appendSci(b.children[1], (t.menu || t.label).replace(/\n/g,' '), t.ital);
         b.onclick = function(){ addItem(t); };
         var x = document.createElement('button'); x.className = 'x'; x.textContent = '×';
         x.setAttribute('aria-label','Remove '+(t.menu||t.label).replace(/\n/g,' ')+' from menu');
@@ -750,7 +754,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   function addItem(t){
     var n = state.items.length, d = t.d;
-    var it = {id:state.nextId++, label:t.label, d:d, color:t.color, pattern:t.pattern, layer:t.layer, fs:(t.fs === undefined ? (state.prefs.auto ? null : state.prefs.fs) : t.fs), menu:t.menu||'', src:t.id||null,
+    var it = {id:state.nextId++, label:t.label, d:d, color:t.color, pattern:t.pattern, layer:t.layer, fs:(t.fs === undefined ? (state.prefs.auto ? null : state.prefs.fs) : t.fs), menu:t.menu||'', ital:t.ital||null, src:t.id||null,
       x:0, y:0};
     var spot = openSpot(d); it.x = spot.x; it.y = spot.y;
     state.items.push(it); state.sel = it.id; render();
@@ -779,7 +783,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!state.prefs.usedCustom){ state.prefs.usedCustom = true; this.classList.remove('primary'); }
     addItem({label:'Custom', d:3, color:'#117733', pattern:'dots', layer:'small'});
   };
-  function tplData(it){ return {label:it.label, d:it.d, color:it.color, pattern:it.pattern, layer:it.layer, fs:it.fs||null, menu:it.menu||''}; }
+  function tplData(it){ return {label:it.label, d:it.d, color:it.color, pattern:it.pattern, layer:it.layer, fs:it.fs||null, menu:it.menu||'', ital:it.ital||null}; }
   function flash(id, txt){ $(id).textContent = txt; setTimeout(renderEditor, 1300); }
   $('saveTpl').onclick = function(){
     var it = cur(); if(!it) return;
@@ -790,7 +794,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var it = cur(); if(!it) return;
     var i = state.tpls.findIndex(function(t){ return t.id === it.src; }); if(i < 0) return;
     var t = tplData(it); t.id = it.src; state.tpls[i] = t;
-    state.items.forEach(function(o){ if(o !== it && o.src === it.src){ o.label = it.label; o.menu = it.menu || ''; o.d = it.d; o.color = it.color; o.pattern = it.pattern; o.layer = it.layer; o.fs = it.fs || null; } });
+    state.items.forEach(function(o){ if(o !== it && o.src === it.src){ o.label = it.label; o.menu = it.menu || ''; o.d = it.d; o.color = it.color; o.pattern = it.pattern; o.layer = it.layer; o.fs = it.fs || null; o.ital = it.ital || null; } });
     render(); flash('updTpl','Updated ✓');
   };
 
@@ -858,6 +862,21 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     return at;
   }
+  // Key label: the menu label, minus the common name in its final (parentheses) unless that option is on (off by default)
+  function stripCommon(t){
+    t = t.replace(/\s+$/, '');
+    if(t.charAt(t.length - 1) !== ')') return t;
+    var depth = 0;
+    for(var i = t.length - 1; i >= 0; i--){
+      if(t.charAt(i) === ')') depth++;
+      else if(t.charAt(i) === '(' && --depth === 0){ var out = t.slice(0, i).replace(/\s+$/, ''); return out || t; }
+    }
+    return t;
+  }
+  function keyName(it){
+    var t = (it.menu || it.label).replace(/\n/g, ' ');
+    return state.commonNames === true ? t : stripCommon(t);
+  }
   function renderKey(icons){
     var box = $('key'); box.innerHTML = '';
     var seen = {}, list = [];
@@ -876,7 +895,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         var sv = el('svg',{width:24, height:24, viewBox:'-12 -12 24 24', 'aria-hidden':'true'});
         if(state.view === 'planting') iconParts(icons[plantKey(e.it)], e.it.color, 0, 0, 9).forEach(function(n){ sv.appendChild(n); });
         else sv.appendChild(el('circle',{r:10, fill:fillFor(e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2}));
-        var name = document.createElement('span'); name.textContent = (e.it.menu || e.it.label).replace(/\n/g,' ');
+        var name = document.createElement('span'); appendSci(name, keyName(e.it), e.it.ital, fullName(e.it));
         if(e.n > 1){ var c = document.createElement('small'); c.textContent = ' ×' + e.n; name.appendChild(c); }
         row.appendChild(sv); row.appendChild(name); ul.appendChild(row);
       });
@@ -934,7 +953,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var cn = (COLORS.filter(function(c){ return c[1].toLowerCase() === String(f.color).toLowerCase(); })[0] || [0, 'Custom color'])[1];
       var pn = (PATTERNS.filter(function(q){ return q[0] === f.pattern; })[0] || [0, f.pattern])[1];
       var li = document.createElement('li');
-      li.textContent = cn + ', ' + pn + ': ' + groups[k].map(function(t){ return (t.menu || t.label).replace(/\n/g,' '); }).join(', ');
+      li.appendChild(document.createTextNode(cn + ', ' + pn + ': '));
+      groups[k].forEach(function(t, n){ if(n) li.appendChild(document.createTextNode(', ')); appendSci(li, (t.menu || t.label).replace(/\n/g,' '), t.ital); });
       ul.appendChild(li);
     });
     w.appendChild(ul);
@@ -986,6 +1006,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   $('opa').oninput = function(){ state.opacity = parseInt(this.value, 10) / 100; render(); };
   $('aoOn').onchange = function(){ state.autoOrder = this.checked; render(); };
   $('scOn').onchange = function(){ state.scale = this.checked; render(); };
+  $('cnOn').onchange = function(){ state.commonNames = this.checked; render(); };
   $('cpOn').onchange = function(){ state.compass = this.checked; render(); };
   $('cpDeg').onchange = function(){
     var v = parseFloat(this.value); if(isNaN(v)) v = 0;
@@ -995,6 +1016,70 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   var PRESETS = [["Tree","Abies grandis var. grandis (Coast Grand Fir)","ABI|GRA",10.0,[2,4]],["Tree","Arbutus unedo (Strawberry Tree)","ARB|UNE",10.0,[0,1,3,4]],["Tree","Calocedrus decurrens (Incense Cedar)","CAL|DEC",10.0,[2,4]],["Tree","Picea sitchensis (Sitka Spruce)","PIC|SIT",10.0,[4,7]],["Tree","Pinus contorta var. contorta (Shore Pine)","PIN|CON",10.0,[2,4,6]],["Tree","Pseudotsuga menziesii (Douglas-fir)","PSE|MEN",10.0,[2,4,5]],["Tree","Thuja plicata (Western Redcedar)","THU|PLI",10.0,[2,4,5]],["Tree","Acer circinatum (Vine Maple)","ACE|CIR",10.0,[0,1,2,8]],["Tree","Acer glabrum var. douglasii (Douglas Maple)","ACE|GLA",10.0,[0,1,2,8]],["Tree","Acer macrophyllum (Big-leaf Maple)","ACE|MAC",10.0,[0,1,2]],["Tree","Alnus rubra (Red Alder)","ALN|RUB",10.0,[1,2]],["Tree","Carpinus caroliniana (American Hornbeam)","CAR|CAR",10.0,[0]],["Tree","Carpinus japonica (Japanese Hornbeam)","CAR|JAP",10.0,[0]],["Tree","Cercis canadensis (Eastern Redbud)","CER|CAN",10.0,[0,1]],["Tree","Cercis occidentalis (Western Redbud)","CER|OCC",10.0,[0,1]],["Tree","Crataegus douglasii (Black or Western Hawthorn)","CRA|DOU",10.0,[0,2,3,4,5,6,7,8]],["Tree","Frangula (Rhamnus) purshiana (Cascara)","FRA|PUR",10.0,[0,1,2,3,8]],["Tree","Fraxinus latifolia (Oregon Ash)","FRA|LAT",10.0,[1,2]],["Tree","Malus fusca (Pacific Crabapple)","MAL|FUS",10.0,[0,1,2,3,4,6,7]],["Tree","Populus balsamifera ssp. trichocarpa (Black Poplar)","POP|BAL",10.0,[2,4,6,8]],["Tree","Prunus emarginata (Bitter Cherry)","PRU|EMA",10.0,[0,1,2,3,4,6]],["Tree","Prunus virginiana (Chokecherry)","PRU|VIR",10.0,[0,2,3,4,5,6,8]],["Tree","Salix hookeriana (Hooker Willow)","SAL|HOO",10.0,[0,1,2,4,5,6,8]],["Tree","Salix lucida ssp. lasiandra (Pacific Willow)","SAL|LUC",10.0,[0,1,2,4,6,8]],["Tree","Salix scouleriana (Scouler’s Willow)","SAL|SCO",10.0,[0,1,2,4,6,8]],["Tree","Salix sitchensis (Sitka Willow)","SAL|SIT",10.0,[0,1,2,4,6,8]],["Large Shrub","Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","ARB|UNECOM",8.0,[0,1,3,4,6]],["Large Shrub","Ceanothus thyrsiflorus 'Victoria' (California Lilac, Blue Blossom,)","CEA|THY",5.0,[0,1,2,4,5,6]],["Large Shrub","Elaeagnus pungens (Thorny Silverberry)","ELA|PUN",8.0,[0,1,3,4,6,7]],["Large Shrub","Morella (Myrica) californica (California or Pacific Wax Myrtle)","MOR|CAL",8.0,[0,2,3,4,5,6,8]],["Large Shrub","Osmanthus x burkwoodii (Burkwood Osmanthus)","OSM|BUR",8.0,[0,1,4,5]],["Large Shrub","Pittosporum heterophyllum (Chinese Pittosporum)","PIT|HET",8.0,[0,3,4,5]],["Large Shrub","Pyracantha coccinea (Scarlet Firethorn)","PYR|COC",8.0,[0,3,4,5,6,7]],["Large Shrub","Pyracantha fortuneana 'Graberi' (Graber's Firethorn)","PYR|FOR",8.0,[0,1,3,4,5,6,7]],["Large Shrub","Viburnum tinus (Laurustinus)","VIB|TIN",8.0,[0,1,3,4,5,6]],["Large Shrub","Amelanchier alnifolia (Western Serviceberry)","AME|ALN",8.0,[0,2,3,8]],["Large Shrub","Ceanothus sanguineus (Redstem Ceanothus)","CEA|SAN",5.0,[0,2]],["Large Shrub","Chaenomeles speciosa (Flowering Quince)","CHA|SPE",5.0,[0,1,3,4,5,6,7]],["Large Shrub","Cornus sericea (Yellow-Twig Dogwood)","COR|SER",8.0,[0,3,5,6,8]],["Large Shrub","Cornus sericea ssp. occidentalis (Red-osier Dogwood)","COR|SEROCC",8.0,[0,2,3,6,8]],["Large Shrub","Corylus cornuta (Beaked Hazel)","COR|COR",8.0,[1,3]],["Large Shrub","Holodiscus discolor (Oceanspray)","HOL|DIS",8.0,[0,2,8]],["Large Shrub","Lonicera involucrata (Black Twinberry)","LON|INV",5.0,[0,1,2,3,6,8]],["Large Shrub","Oemleria cerasiformis (Osoberry, Indian Plum)","OEM|CER",8.0,[0,1,3,6,8]],["Large Shrub","Philadelphus lewisii (Mock-orange)","PHI|LEW",5.0,[0,8]],["Large Shrub","Physocarpus capitatus (Pacific Ninebark)","PHY|CAP",8.0,[0,2,3,8]],["Large Shrub","Ribes sanguineum (Red-flowering Currant)","RIB|SAN",5.0,[0,1,2,3]],["Large Shrub","Sambucus caerulea (Blue Elderberry)","SAM|CAE",8.0,[0,2,3,6,8]],["Large Shrub","Sambucus racemosa (Red Elderberry)","SAM|RAC",8.0,[0,1,2,3,8]],["Large Shrub","Berberis darwinii (Darwin Barberry)","BER|DAR",5.0,[0,1,3,4,5,6,7]],["Large Shrub","Berberis julianae (Wintergreen Barberry)","BER|JUL",8.0,[0,1,3,4,5,6,7]],["Large Shrub","Mahonia aquifolium (Tall Oregon-grape)","MAH|AQU",5.0,[0,1,3,4,6,7,8]],["Large Shrub","Pittosporum tenuifolium (Tasman Ruffles' Pittosporum)","PIT|TEN",5.0,[0,4,5]],["Smaller Shrub","Aronia melanocarpa (Black chokeberry)","ARO|MEL",3.0,[0,3,5,6,8]],["Smaller Shrub","Berberis thunbergii var. atropurpurea (Purple Japanese Barberry)","BER|THU",3.0,[0,1,3,5,7]],["Smaller Shrub","Rhus aromatica 'Gro-Low' (Gro-Low Sumac)","RHU|ARO",3.0,[0,5]],["Smaller Shrub","Rhus trilobata (Skunkbush Sumac)","RHU|TRI",3.0,[0,4,5,6]],["Smaller Shrub","Ribes divaricatum (Coast Black Gooseberry)","RIB|DIV",3.0,[0,1,2,3,7,8]],["Smaller Shrub","Rosa nutkana (Nootka Rose)","ROS|NUT",3.0,[0,2,3,5,6,7,8]],["Smaller Shrub","Rosa pisocarpa (Clustered Wild Rose)","ROS|PIS",3.0,[0,2,3,5,6,7,8]],["Smaller Shrub","Rubus parviflorus (Thimbleberry)","RUB|PAR",3.0,[0,3,5,6,8]],["Smaller Shrub","Spiraea douglasii (Douglas Spirea)","SPI|DOU",3.0,[0,2,5,6,8]],["Smaller Shrub","Symphoricarpos albus (Snowberry)","SYM|ALB",3.0,[0,1,2,3,5,6,8]],["Smaller Shrub","Viburnum edule (Highbush Cranberry)","VIB|EDU",3.0,[0,2,3,8]],["Smaller Shrub","Viburnum opulus var. americanum (American Cranberrybush Viburnum)","VIB|OPU",3.0,[0,3,5]],["Smaller Shrub","Abelia x 'Edward Goucher' (Edward Goucher' Glossy Abelia)","ABE|EDW",3.0,[0,1,5]],["Smaller Shrub","Abelia x grandiflora (Glossy Abelia)","ABE|GRA",3.0,[0,1,5]],["Smaller Shrub","Berberis verruculosa (Warty Barberry)","BER|VER",3.0,[0,1,3,4,5,7]],["herbaceous","Gaultheria shallon (Salal)","GAU|SHA",3.0,[0,1,2,3,4,5,6,8]],["Smaller Shrub","Mahonia nervosa (Low (Cascade) Oregon-grape)","MAH|NER",3.0,[0,1,3,5,8]],["herbaceous","Polystichum munitum (Sword Fern)","POL|MUN",3.0,[4,5]],["Smaller Shrub","Vaccinium ovatum (Evergreen Huckleberry)","VAC|OVA",3.0,[0,1,2,3,5]],["Smaller Shrub","Ribes lacustre (Swamp or Black Gooseberry)","RIB|LAC",3.0,[0,1,2,3,5,6,7]],["Smaller Shrub","Rosa gymnocarpa (Bald-hip Rose)","ROS|GYM",3.0,[0,2,3,5,7]],["Smaller Shrub","Rubus spectabilis (Salmonberry)","RUB|SPE",3.0,[0,1,3,7,8]]];
   var TRAITS = ['Pollinator-attracting', 'Shoulder-season blooming (September to May)', 'Larval hosts', 'Fruit, berries, nuts', 'Dense foliage', 'Foliage at lower & ground levels', 'Thicket-forming / dense woody structure', 'Thorns, prickles or spurs', 'Soil-binding / erosion control'];
+  // ---- scientific names: italicize the Latin, keep cultivars, rank words and common names upright ----
+  var GENERA = {};
+  'Abelia Abeliophyllum Abies Abronia Abutilon Acacia Acaena Acanthus Acer Achillea Achlys Aconitum Acorus Actaea Actinidia Adenocaulon Adiantum Aegopodium Aeonium Aesculus Agapanthus Agastache Agave Ageratum Agoseris Agrimonia Agropyron Agrostis Ailanthus Ajuga Akebia Albizia Alcea Alchemilla Alisma Allium Alnus Alocasia Aloe Alopecurus Aloysia Alstroemeria Althaea Alyssum Amaranthus Amaryllis Amelanchier Amorpha Ampelopsis Amsinckia Amsonia Anacardium Anagallis Anaphalis Anchusa Andromeda Andropogon Anemone Anemonella Anethum Angelica Anigozanthos Antennaria Anthemis Anthoxanthum Anthriscus Anthurium Antirrhinum Apium Apocynum Aquilegia Arabis Arachis Aralia Araucaria Arbutus Arctium Arctostaphylos Arenaria Argentina Arisaema Aristolochia Armeria Armoracia Arnica Aronia Arrhenatherum Artemisia Aruncus Arundo Asarum Asclepias Asimina Asparagus Asplenium Aster Astilbe Astragalus Astrantia Athyrium Atriplex Aubrieta Aucuba Avena Azalea Azolla Baccharis Balsamorhiza Banksia Baptisia Barbarea Begonia Bellis Berberis Bergenia Beta Betula Bidens Bignonia Blechnum Bletilla Boltonia Borago Bougainvillea Bouteloua Boykinia Brachypodium Brassica Briza Brodiaea Bromus Brugmansia Brunnera Buddleja Bupleurum Butomus Buxus Cakile Calamagrostis Calamintha Calendula Calla Callicarpa Callistemon Calluna Calocedrus Calochortus Caltha Calycanthus Calypso Calystegia Camassia Camellia Campanula Campsis Canna Cannabis Capsella Capsicum Caragana Cardamine Carex Carica Carpinus Carpobrotus Carya Caryopteris Cassiope Castanea Castanopsis Castilleja Catalpa Catananche Ceanothus Cedrus Celastrus Celosia Celtis Centaurea Centranthus Cephalanthus Cephalotaxus Cerastium Ceratophyllum Cercidiphyllum Cercis Cercocarpus Chaenomeles Chamaecyparis Chamaedaphne Chamaemelum Chamerion Chasmanthium Cheiranthus Chelidonium Chelone Chenopodium Chilopsis Chimaphila Chimonanthus Chionanthus Chionodoxa Chlorogalum Choisya Chrysanthemum Chrysolepis Chrysothamnus Cichorium Cimicifuga Circaea Cirsium Cistus Citrullus Citrus Cladrastis Clarkia Claytonia Clematis Cleome Clerodendrum Clethra Clintonia Cocos Coffea Colchicum Coleus Collinsia Collomia Colocasia Comarum Comptonia Consolida Convallaria Convolvulus Coprosma Cordyline Coreopsis Coriandrum Cornus Corokia Coronilla Cortaderia Corydalis Corylopsis Corylus Cosmos Cotinus Cotoneaster Crambe Crassula Crataegus Crinum Crocosmia Crocus Cryptomeria Cucumis Cucurbita Cunninghamia Cupressus Cuscuta Cyclamen Cydonia Cymbalaria Cynara Cynodon Cynoglossum Cyperus Cypripedium Cystopteris Cytisus Dactylis Dahlia Danthonia Daphne Darlingtonia Darmera Datura Daucus Davidia Delosperma Delphinium Dendromecon Deschampsia Deutzia Dianthus Diascia Dicentra Dichelostemma Dictamnus Dierama Diervilla Digitalis Diospyros Diphylleia Disporum Dodecatheon Doronicum Douglasia Draba Dracaena Drosera Dryas Dryopteris Duchesnea Echeveria Echinacea Echinops Echium Elaeagnus Eleocharis Elodea Elymus Empetrum Enkianthus Ephedra Epilobium Epimedium Epipactis Equisetum Eragrostis Eranthis Eremurus Erica Ericameria Erigeron Eriobotrya Eriogonum Eriophyllum Erodium Eryngium Erysimum Erythronium Escallonia Eschscholzia Eucalyptus Eucomis Euonymus Eupatorium Euphorbia Eurybia Euthamia Exochorda Fagus Fallopia Fargesia Fatsia Fauria Festuca Ficus Filipendula Foeniculum Forsythia Fothergilla Fragaria Frangula Franklinia Fraxinus Fremontodendron Fritillaria Fuchsia Gaillardia Galanthus Galium Gardenia Garrya Gaultheria Gaura Gazania Genista Gentiana Geranium Geum Ginkgo Gladiolus Glechoma Gleditsia Glyceria Glycine Glycyrrhiza Gnaphalium Godetia Goodyera Gossypium Grevillea Grindelia Griselinia Gunnera Gymnocarpium Gymnocladus Gypsophila Hakonechloa Halesia Hamamelis Hebe Hedera Hedysarum Helenium Helianthemum Helianthus Helichrysum Helictotrichon Heliopsis Heliotropium Helleborus Hemerocallis Hepatica Heracleum Hesperis Hesperostipa Heuchera Hibiscus Hieracium Hierochloe Hippophae Holcus Holodiscus Hordeum Hosta Houttuynia Humulus Hyacinthoides Hyacinthus Hydrangea Hydrophyllum Hylotelephium Hypericum Hypochaeris Iberis Ilex Impatiens Imperata Indigofera Inula Ipomoea Iris Isatis Itea Jasminum Juglans Juncus Juniperus Justicia Kalmia Kalopanax Kerria Knautia Kniphofia Koeleria Koelreuteria Kolkwitzia Laburnum Lactuca Lagerstroemia Lamium Lamprocapnos Lantana Larix Lathyrus Laurus Lavandula Lavatera Ledum Leonotis Leontodon Lepidium Leptinella Leptospermum Lespedeza Leucanthemum Leucojum Leucothoe Levisticum Lewisia Leycesteria Leymus Liatris Ligularia Ligustrum Lilium Limonium Linaria Linnaea Linum Liquidambar Liriodendron Liriope Lithocarpus Lithodora Lithophragma Lobelia Lobularia Lolium Lomatium Lonicera Lotus Ludwigia Lunaria Lupinus Luzula Lychnis Lycium Lycopersicon Lycopodium Lysichiton Lysimachia Lythrum Maackia Macleaya Magnolia Mahonia Maianthemum Malus Malva Mandevilla Mangifera Marah Marrubium Matricaria Matteuccia Meconopsis Medicago Melaleuca Melica Melissa Mentha Menyanthes Menziesia Mertensia Mespilus Metasequoia Microbiota Mimulus Mirabilis Miscanthus Mitella Molinia Monarda Monardella Montia Morella Morus Muhlenbergia Musa Muscari Myosotis Myrica Myriophyllum Myrtus Nandina Narcissus Nasturtium Nemophila Nepeta Nerium Nicotiana Nigella Nothofagus Nuphar Nymphaea Nymphoides Nyssa Ocimum Oemleria Oenanthe Oenothera Olea Olsynium Onoclea Ophiopogon Oplopanax Opuntia Origanum Ornithogalum Orthilia Oryza Osmanthus Osmorhiza Osmunda Osmundastrum Ostrya Oxalis Oxydendrum Oxyria Pachysandra Paeonia Panicum Papaver Parrotia Parthenocissus Passiflora Paxistima Pelargonium Pennisetum Penstemon Pentaglottis Perovskia Persea Persicaria Petasites Petroselinum Petunia Phacelia Phalaris Phaseolus Philadelphus Phleum Phlomis Phlox Phormium Photinia Phragmites Phyllodoce Phyllostachys Physocarpus Physostegia Picea Pieris Pilea Pimpinella Pinguicula Pinus Piptatherum Pisum Pittosporum Plantago Platanus Platycladus Platycodon Plectranthus Pleioblastus Plumbago Poa Podocarpus Polemonium Polygala Polygonatum Polygonum Polypodium Polystichum Pontederia Populus Portulaca Potamogeton Potentilla Primula Prosartes Prunella Prunus Pseudotsuga Pteridium Pterocarya Pulmonaria Pulsatilla Punica Puschkinia Pyracantha Pyrola Pyrus Quercus Ranunculus Raphanus Ratibida Rhamnus Rheum Rhododendron Rhus Ribes Ricinus Robinia Rodgersia Romneya Rorippa Rosa Rosmarinus Rubus Rudbeckia Rumex Ruta Sagina Sagittaria Salix Salvia Sambucus Sanguinaria Sanguisorba Sanicula Santolina Saponaria Sarcococca Sasa Sassafras Satureja Saxifraga Scabiosa Schefflera Schizachyrium Schizophragma Schoenoplectus Sciadopitys Scilla Scirpus Scrophularia Scutellaria Secale Sedum Sempervivum Senecio Sequoia Sequoiadendron Shepherdia Sidalcea Silene Silphium Sisyrinchium Sium Skimmia Smilacina Smilax Solanum Solidago Sorbaria Sorbus Sorghastrum Sorghum Sparganium Spartina Spartium Sphaeralcea Spinacia Spiraea Spiranthes Sporobolus Stachys Staphylea Stellaria Stephanandra Stewartia Stipa Stokesia Streptopus Styrax Suaeda Symphoricarpos Symphyotrichum Symphytum Syringa Tagetes Tamarix Tanacetum Taraxacum Taxodium Taxus Tellima Teucrium Thalictrum Thermopsis Thuja Thujopsis Thymus Tiarella Tilia Tolmiea Toxicodendron Trachelospermum Trachycarpus Tradescantia Trautvetteria Trientalis Trifolium Trillium Triteleia Triticum Trollius Tropaeolum Tsuga Tulipa Typha Ulex Ulmus Umbellularia Urtica Uvularia Vaccinium Valeriana Vancouveria Veratrum Verbascum Verbena Veronica Veronicastrum Viburnum Vicia Vinca Viola Viscum Vitex Vitis Washingtonia Weigela Whipplea Wisteria Woodwardia Wyethia Xerophyllum Yucca Zantedeschia Zauschneria Zea Zelkova Zigadenus Zinnia Zizia'.split(' ').forEach(function(g){ GENERA[g.toLowerCase()] = 1; });
+  PRESETS.forEach(function(p){ GENERA[String(p[1]).split(' ')[0].replace(/[^a-z]/gi, '').toLowerCase()] = 1; });
+  var RANKS = {'var.':1, 'ssp.':1, 'subsp.':1, 'spp.':1, 'sp.':1, 'x':1, '×':1, 'cv.':1, 'f.':1, 'aka':1};
+  function trailingParen(t){
+    t = t.replace(/\s+$/, '');
+    if(t.charAt(t.length - 1) !== ')') return -1;
+    var d = 0;
+    for(var i = t.length - 1; i >= 0; i--){ var c = t.charAt(i); if(c === ')') d++; else if(c === '(' && --d === 0) return i; }
+    return -1;
+  }
+  // a label as words, each flagged italic when it is part of the scientific name
+  // ital (optional): {text, flags} saved on a plant when someone picks italic words by hand
+  // words that follow a genus in a common name rather than a species epithet
+  var NOT_EPITHET = {tree:1, trees:1, shrub:1, shrubs:1, bush:1, vine:1, vines:1, grass:1, fern:1, ferns:1, plant:1, plants:1, hedge:1,
+    tall:1, dwarf:1, low:1, red:1, white:1, blue:1, black:1, green:1, yellow:1, purple:1, pink:1, golden:1, wild:1, native:1,
+    and:1, or:1, with:1, for:1, the:1, of:1, cultivar:1, cultivars:1, variety:1, varieties:1, group:1, form:1, hybrid:1, mix:1, seedling:1, seedlings:1, species:1};
+  // A label as words, each flagged italic when it is part of the scientific name.
+  // Italic: a known genus (or any capitalized first word when a common name follows in parentheses), the
+  // lowercase epithets after it, and synonyms in parentheses. Upright: rank words (var., ssp.), the hybrid x,
+  // cultivars in quotes, and everything from the first word that doesn't fit, such as the common name.
+  // full (optional): the complete label when text is the key's shortened form; italics are decided on the full name
+  function sciWords(text, ital, full){
+    text = String(text || '').replace(/\s+/g, ' ').trim();
+    full = full ? String(full).replace(/\s+/g, ' ').trim() : '';
+    if(full && full !== text && full.indexOf(text) === 0) return sciWords(full, ital).slice(0, text ? text.split(' ').length : 0);
+    var words = text ? text.split(' ') : [], out = words.map(function(w){ return {w:w, i:false}; });
+    var cut = trailingParen(text), first = (words[0] || '').replace(/[^a-z]/gi, '');
+    var genusOk = /^[A-Z][a-z]+$/.test(first) && (GENERA[first.toLowerCase()] || (cut > 0 && /^[a-z]/.test(words[1] || '')));
+    if(genusOk){
+      var latin = [0], epithets = 0, inQuote = false, qualified = false;
+      // never treat the trailing (common name) as Latin
+      var stop = cut > 0 ? text.slice(0, cut).trim().split(' ').length : words.length;
+      for(var k = 1; k < stop; k++){
+        var w = words[k], core = w.replace(/^[(\[]+|[)\],;]+$/g, ''), low = core.toLowerCase();
+        if(/^['‘]/.test(w) || inQuote){                       // cultivar in quotes
+          if(/^['‘]/.test(w) && !/['’]$/.test(w.slice(1))) inQuote = true;
+          else if(inQuote && /['’]$/.test(w)) inQuote = false;
+          qualified = true; continue;
+        }
+        if(RANKS[low]){ if(low === 'x' || low === '×') qualified = true; continue; }   // var., ssp., x
+        if(/^\([A-Z][a-z]+\)[,;]?$/.test(w)){ latin.push(k); continue; }   // a one-word synonym such as (Rhamnus)
+        if(/^[a-z][a-z-]{2,}$/.test(core) && !NOT_EPITHET[low]){ latin.push(k); epithets++; continue; }
+        break;                                                        // common name or anything else
+      }
+      // a genus on its own reads as a common name ("Magnolia"), unless it is "Salix spp." style
+      var sp = words.slice(1, 3).some(function(w){ return /^spp?\.$/i.test(w); });
+      if(epithets || sp || qualified) latin.forEach(function(k){ out[k].i = true; });
+    }
+    return out;
+  }
+  function fullName(it){ return String(it.menu || it.label || '').replace(/\s+/g, ' ').trim(); }
+  // write a label into an element with the Latin parts in <i>
+  function appendSci(el, text, ital, full){
+    sciWords(text, ital, full).forEach(function(o, k){
+      if(k) el.appendChild(document.createTextNode(' '));
+      if(!o.i){ el.appendChild(document.createTextNode(o.w)); return; }
+      var m = o.w.match(/^([(\[]*)(.*?)([)\],;]*)$/);
+      if(m[1]) el.appendChild(document.createTextNode(m[1]));
+      var it = document.createElement('i'); it.textContent = m[2]; el.appendChild(it);
+      if(m[3]) el.appendChild(document.createTextNode(m[3]));
+    });
+  }
   var prAnchor = null;
   var prDlg = $('presetDlg'), picked = {}, ENTRY = {}, prOpen = {u:false, n:false};
   // every choosable plant, keyed: 'n<i>' for Native Plant Salvage Foundation, 'u<list>_<j>' for user presets
@@ -1040,7 +1125,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
           prAnchor = {gid:gid, idx:idx};
           renderPresets(); prCountUpdate();
         });
-        var nm = document.createElement('span'); nm.textContent = e.name + (off ? ' (in menu)' : '');
+        var nm = document.createElement('span'); appendSci(nm, e.name, e.tpl && e.tpl.ital); if(off) nm.appendChild(document.createTextNode(' (in menu)'));
         var sz = document.createElement('small'); sz.textContent = e.d + ' ft spacing';
         row.appendChild(cb); row.appendChild(nm); row.appendChild(sz); box.appendChild(row);
         shown++;
@@ -1277,7 +1362,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     $('count').textContent = state.items.length + (state.items.length===1?' plant':' plants');
     $('bw').value = state.w; $('bh').value = state.h;
     $('gc').value = state.cell || 1; $('gm').value = state.major || 5; $('gm').min = cell; $('gm').step = cell;
-    $('aoOn').checked = !!state.autoOrder; $('scOn').checked = state.scale !== false; $('cpOn').checked = !!state.compass;
+    $('aoOn').checked = !!state.autoOrder; $('scOn').checked = state.scale !== false; $('cnOn').checked = state.commonNames === true; $('cpOn').checked = !!state.compass;
     $('cpDeg').disabled = !state.compass; $('northRow').classList.toggle('off', !state.compass); $('cpHelp').style.opacity = state.compass ? 1 : .45; $('cpDeg').value = state.north || 0;
     $('opa').value = Math.round((state.opacity === undefined ? 0.88 : state.opacity) * 100); $('opaVal').textContent = $('opa').value + '%';
     ;
@@ -1357,7 +1442,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var v = this.value.split('\n').slice(0,2).join('\n'); if(v !== this.value) this.value = v;
     it.label = v; render();
   };
-  $('menuLbl').oninput = function(){ var it = cur(); if(it){ it.menu = this.value; save(); } };
+  $('menuLbl').oninput = function(){ var it = cur(); if(it){ it.menu = this.value; render(); } };
   function setFs(v){ var it = cur(); if(it && v > 0){ it.fs = clamp(v, 6, 80); state.prefs.fs = it.fs; render(); } }
   $('fs').oninput = function(){ setFs(parseFloat(this.value)); };
   $('fsNum').oninput = function(){ setFs(parseFloat(this.value)); };
@@ -1429,7 +1514,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     ask('Add plants to your menu?', 'Append ' + label + ' from “' + layoutName + '” to your Add a plant menu? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
       missing.forEach(function(key){
         var group = seen[key], first = group[0];
-        var t = {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null};
+        var t = {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null, ital:first.ital || null};
         if(!LAYERS.some(function(l){ return l[0] === t.layer; })) t.layer = 'herb';
         group.forEach(function(it){ it.src = t.id; });
         state.tpls.push(t);
@@ -1453,7 +1538,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       function doLoad(){
         var c = JSON.parse(JSON.stringify(lay));
         state.w = c.w; state.h = c.h; state.items = c.items; state.sel = null; state.vis = Object.assign({}, state.vis, c.vis || {});
-        ['cell','major','scale','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
+        ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
         state.nextId = Math.max(state.nextId, state.items.reduce(function(m,x){ return Math.max(m,x.id); },0)+1);
         render();
         offerLayoutPlants(lay.name);
@@ -1468,7 +1553,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!name){ $('tplName').focus(); return; }
     state.layouts = state.layouts || [];
     var snap = {name:name, w:state.w, h:state.h, vis:JSON.parse(JSON.stringify(state.vis)), items:JSON.parse(JSON.stringify(state.items))};
-    ['cell','major','scale','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(state[k] !== undefined) snap[k] = state[k]; });
+    ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(state[k] !== undefined) snap[k] = state[k]; });
     var i = state.layouts.findIndex(function(l){ return l.name === name; });
     if(i >= 0) state.layouts[i] = snap; else state.layouts.push(snap);
     save(); renderLayouts(); say('Saved “'+name+'”');
@@ -1552,17 +1637,28 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!groups.length) return {node:g, h:0};
     var ncol = width >= 360 && groups.length > 1 ? 2 : 1, gapX = 28, cw = (width - gapX * (ncol - 1)) / ncol;
     var maxc = Math.max(14, Math.floor((cw - 56) / 7));
-    function wrapLines(t){
-      var out = [], cur = '';
-      t.split(' ').forEach(function(w){ var n = cur ? cur + ' ' + w : w; if(n.length > maxc && cur){ out.push(cur); cur = w; } else cur = n; });
-      out.push(cur);
-      if(out.length > 2) out = [out[0], out.slice(1).join(' ')];
-      if(out[1] && out[1].length > maxc + 2) out[1] = out[1].slice(0, maxc + 1) + '…';
-      return out;
+    function wrapWords(words){
+      var lines = [], cur = [], len = 0;
+      words.forEach(function(o){
+        var add = (cur.length ? 1 : 0) + o.w.length;
+        if(len + add > maxc && cur.length){ lines.push(cur); cur = [o]; len = o.w.length; }
+        else { cur.push(o); len += add; }
+      });
+      if(cur.length) lines.push(cur);
+      if(lines.length > 2){
+        var rest = [].concat.apply([], lines.slice(1)), keep = [], n = 0;
+        for(var k = 0; k < rest.length; k++){
+          var ad = (keep.length ? 1 : 0) + rest[k].w.length;
+          if(n + ad > maxc){ keep.push({w:'…', i:false}); break; }
+          keep.push(rest[k]); n += ad;
+        }
+        lines = [lines[0], keep];
+      }
+      return lines;
     }
     // measure each group
     groups.forEach(function(G){
-      G.rows = G.grp.map(function(e){ return {e:e, ls:wrapLines((e.it.menu || e.it.label).replace(/\n/g,' ') + (e.n > 1 ? '  ×' + e.n : ''))}; });
+      G.rows = G.grp.map(function(e){ var ws = sciWords(keyName(e.it), e.it.ital, fullName(e.it)); if(e.n > 1) ws.push({w:'\u00d7' + e.n, i:false}); return {e:e, ls:wrapWords(ws)}; });
       G.h = 24 + G.rows.reduce(function(sum, r){ return sum + (r.ls.length > 1 ? 38 : 28); }, 0) + 16;
     });
     var split = ncol === 2 ? keySplit(groups, 84) : groups.length;
@@ -1576,7 +1672,14 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         if(state.view === 'planting') iconParts(icons[plantKey(r.e.it)], r.e.it.color, cx + 26, y + 12, 9).forEach(function(n){ g.appendChild(n); });
         else g.appendChild(el('circle',{cx:cx + 26, cy:y + 12, r:10, fill:fillFor(r.e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2}));
         var t = el('text',{'font-family':FF, 'font-size':13, fill:'#1f2328'});
-        r.ls.forEach(function(ln, j){ var ts = el('tspan',{x:cx + 44, y:y + 16 + j*15}); ts.textContent = ln; t.appendChild(ts); });
+        r.ls.forEach(function(ln, j){
+          var ts = el('tspan',{x:cx + 44, y:y + 16 + j*15});
+          ln.forEach(function(o, k){
+            var part = el('tspan', o.i ? {'font-style':'italic'} : {});
+            part.textContent = (k ? ' ' : '') + o.w; ts.appendChild(part);
+          });
+          t.appendChild(ts);
+        });
         g.appendChild(t);
         y += r.ls.length > 1 ? 38 : 28;
       });

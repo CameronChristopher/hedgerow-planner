@@ -1094,10 +1094,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   // ---- diagram extent + zoom ----
   var lastB = null, vp = $('vp');
-  function bounds(){
+  // On screen the drawing area always fits the full spacing circles, so the grid stays in the
+  // same place in both views. Exports of the planting diagram trim to the icons instead.
+  function bounds(forExport){
     var W = state.w*S, H = state.h*S, x0 = -80, y0 = -80, x1 = W + 80, y1 = H + 80;
     state.items.forEach(function(it){
-      var r = state.view === 'planting' ? 22 : it.d*S/2 + 6;
+      var r = (forExport && state.view === 'planting') ? 22 : it.d*S/2 + 6;
       x0 = Math.min(x0, it.x*S - r); y0 = Math.min(y0, it.y*S - r);
       x1 = Math.max(x1, it.x*S + r); y1 = Math.max(y1, it.y*S + r);
     });
@@ -1488,7 +1490,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function exportSvg(){
     var clone = svg.cloneNode(true);
     ['#selring','.empty'].forEach(function(q){ var n = clone.querySelector(q); if(n) n.remove(); });
-    var B = bounds(), kg = exportKey(B.x + 20, B.y + B.h + 10, B.w - 40);
+    var B = bounds(true), kg = exportKey(B.x + 20, B.y + B.h + 10, B.w - 40);
     var W = B.w, H = B.h + (kg.h ? kg.h + 30 : 0);
     clone.setAttribute('viewBox', B.x+' '+B.y+' '+W+' '+H);
     clone.setAttribute('xmlns', NS); clone.setAttribute('width', W); clone.setAttribute('height', H);

@@ -203,8 +203,17 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 .prtog:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .prtog .prsel{margin-left:auto}
 .prh .prn{flex:1;min-width:0;overflow-wrap:anywhere}
+.prh.prclick{cursor:pointer}
+.pri{user-select:none;-webkit-user-select:none;cursor:pointer}
+.pri.off{cursor:default}
 .prh small{font-weight:400;color:var(--muted)}
 .prh .x{width:26px;height:26px;flex:none;font-weight:400}
+.prsubh{font-size:12px;font-weight:700;color:var(--muted);margin:0 -10px;padding:12px 10px 6px;background:var(--panel)}
+.prx{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:12px;font-weight:400;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 10px;cursor:pointer}
+.prx::after{content:"";width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg)}
+.prx[aria-expanded=false]::after{transform:rotate(-45deg)}
+.prx:hover{border-color:var(--ink)}
+.prx:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .more{margin:0 0 8px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--muted)}
 .more[hidden]{display:none}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px 32px}
@@ -433,7 +442,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 <dialog id="presetDlg" aria-labelledby="prTitle" style="width:min(640px,94vw)">
   <div class="dh"><h2 id="prTitle">Presets</h2><button class="btn" id="prClose">Close</button></div>
   <div class="db" style="padding-top:10px">
-    <p class="sub" style="margin:0 0 8px">Tick the plants to add to your Add a plant menu. Plants already in the menu are greyed out. Lists you save with Save plant list appear under User presets.</p>
+    <p class="sub" style="margin:0 0 8px">Tick the plants to add to your Add a plant menu. Hold Shift and click to tick a run of plants at once. Plants already in the menu are greyed out. Lists you save with Save plant list appear under User presets.</p>
     <input type="text" id="prFind" placeholder="Filter by name" aria-label="Filter presets" style="margin-bottom:8px">
     <div class="prlist" id="prList"></div>
     <div class="row" style="margin-top:12px">
@@ -485,6 +494,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         <li>Added this changelog to the About window, so you can see what’s new each time the planner is updated.</li>
         <li>Loading a saved layout now offers to add any of its plants that aren’t in your Add a plant menu, so you can place more of them and update them later.</li>
         <li>The planting area is now called the “block plan” throughout, instead of “bed.”</li>
+        <li>Presets now has a “By plant characteristic” section under the Native Plant Salvage Foundation, with lists such as Pollinator-attracting, Larval hosts and Soil-binding, so you can pick plants by what they do in a hedgerow.</li>
       </ul>
     </section>
   </div>
@@ -983,7 +993,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     render();
   };
 
-  var PRESETS = [["Tree","Abies grandis var. grandis (Coast Grand Fir)","ABI|GRA",10.0],["Tree","Arbutus unedo (Strawberry Tree)","ARB|UNE",10.0],["Tree","Calocedrus decurrens (Incense Cedar)","CAL|DEC",10.0],["Tree","Picea sitchensis (Sitka Spruce)","PIC|SIT",10.0],["Tree","Pinus contorta var. contorta (Shore Pine)","PIN|CON",10.0],["Tree","Pseudotsuga menziesii (Douglas-fir)","PSE|MEN",10.0],["Tree","Thuja plicata (Western Redcedar)","THU|PLI",10.0],["Tree","Acer circinatum (Vine Maple)","ACE|CIR",10.0],["Tree","Acer glabrum var. douglasii (Douglas Maple)","ACE|GLA",10.0],["Tree","Acer macrophyllum (Big-leaf Maple)","ACE|MAC",10.0],["Tree","Alnus rubra (Red Alder)","ALN|RUB",10.0],["Tree","Carpinus caroliniana (American Hornbeam)","CAR|CAR",10.0],["Tree","Carpinus japonica (Japanese Hornbeam)","CAR|JAP",10.0],["Tree","Cercis canadensis (Eastern Redbud)","CER|CAN",10.0],["Tree","Cercis occidentalis (Western Redbud)","CER|OCC",10.0],["Tree","Crataegus douglasii (Black or Western Hawthorn)","CRA|DOU",10.0],["Tree","Frangula (Rhamnus) purshiana (Cascara)","FRA|PUR",10.0],["Tree","Fraxinus latifolia (Oregon Ash)","FRA|LAT",10.0],["Tree","Malus fusca (Pacific Crabapple)","MAL|FUS",10.0],["Tree","Populus balsamifera ssp. trichocarpa (Black Poplar)","POP|BAL",10.0],["Tree","Prunus emarginata (Bitter Cherry)","PRU|EMA",10.0],["Tree","Prunus virginiana (Chokecherry)","PRU|VIR",10.0],["Tree","Salix hookeriana (Hooker Willow)","SAL|HOO",10.0],["Tree","Salix lucida ssp. lasiandra (Pacific Willow)","SAL|LUC",10.0],["Tree","Salix scouleriana (Scouler’s Willow)","SAL|SCO",10.0],["Tree","Salix sitchensis (Sitka Willow)","SAL|SIT",10.0],["Large Shrub","Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","ARB|UNECOM",8.0],["Large Shrub","Ceanothus thyrsiflorus 'Victoria' (California Lilac, Blue Blossom,)","CEA|THY",5.0],["Large Shrub","Elaeagnus pungens (Thorny Silverberry)","ELA|PUN",8.0],["Large Shrub","Morella (Myrica) californica (California or Pacific Wax Myrtle)","MOR|CAL",8.0],["Large Shrub","Osmanthus x burkwoodii (Burkwood Osmanthus)","OSM|BUR",8.0],["Large Shrub","Pittosporum heterophyllum (Chinese Pittosporum)","PIT|HET",8.0],["Large Shrub","Pyracantha coccinea (Scarlet Firethorn)","PYR|COC",8.0],["Large Shrub","Pyracantha fortuneana 'Graberi' (Graber's Firethorn)","PYR|FOR",8.0],["Large Shrub","Viburnum tinus (Laurustinus)","VIB|TIN",8.0],["Large Shrub","Amelanchier alnifolia (Western Serviceberry)","AME|ALN",8.0],["Large Shrub","Ceanothus sanguineus (Redstem Ceanothus)","CEA|SAN",5.0],["Large Shrub","Chaenomeles speciosa (Flowering Quince)","CHA|SPE",5.0],["Large Shrub","Cornus sericea (Yellow-Twig Dogwood)","COR|SER",8.0],["Large Shrub","Cornus sericea ssp. occidentalis (Red-osier Dogwood)","COR|SEROCC",8.0],["Large Shrub","Corylus cornuta (Beaked Hazel)","COR|COR",8.0],["Large Shrub","Holodiscus discolor (Oceanspray)","HOL|DIS",8.0],["Large Shrub","Lonicera involucrata (Black Twinberry)","LON|INV",5.0],["Large Shrub","Oemleria cerasiformis (Osoberry, Indian Plum)","OEM|CER",8.0],["Large Shrub","Philadelphus lewisii (Mock-orange)","PHI|LEW",5.0],["Large Shrub","Physocarpus capitatus (Pacific Ninebark)","PHY|CAP",8.0],["Large Shrub","Ribes sanguineum (Red-flowering Currant)","RIB|SAN",5.0],["Large Shrub","Sambucus caerulea (Blue Elderberry)","SAM|CAE",8.0],["Large Shrub","Sambucus racemosa (Red Elderberry)","SAM|RAC",8.0],["Large Shrub","Berberis darwinii (Darwin Barberry)","BER|DAR",5.0],["Large Shrub","Berberis julianae (Wintergreen Barberry)","BER|JUL",8.0],["Large Shrub","Mahonia aquifolium (Tall Oregon-grape)","MAH|AQU",5.0],["Large Shrub","Pittosporum tenuifolium (Tasman Ruffles' Pittosporum)","PIT|TEN",5.0],["Smaller Shrub","Aronia melanocarpa (Black chokeberry)","ARO|MEL",3.0],["Smaller Shrub","Berberis thunbergii var. atropurpurea (Purple Japanese Barberry)","BER|THU",3.0],["Smaller Shrub","Rhus aromatica 'Gro-Low' (Gro-Low Sumac)","RHU|ARO",3.0],["Smaller Shrub","Rhus trilobata (Skunkbush Sumac)","RHU|TRI",3.0],["Smaller Shrub","Ribes divaricatum (Coast Black Gooseberry)","RIB|DIV",3.0],["Smaller Shrub","Rosa nutkana (Nootka Rose)","ROS|NUT",3.0],["Smaller Shrub","Rosa pisocarpa (Clustered Wild Rose)","ROS|PIS",3.0],["Smaller Shrub","Rubus parviflorus (Thimbleberry)","RUB|PAR",3.0],["Smaller Shrub","Spiraea douglasii (Douglas Spirea)","SPI|DOU",3.0],["Smaller Shrub","Symphoricarpos albus (Snowberry)","SYM|ALB",3.0],["Smaller Shrub","Viburnum edule (Highbush Cranberry)","VIB|EDU",3.0],["Smaller Shrub","Viburnum opulus var. americanum (American Cranberrybush Viburnum)","VIB|OPU",3.0],["Smaller Shrub","Abelia x 'Edward Goucher' (Edward Goucher' Glossy Abelia)","ABE|EDW",3.0],["Smaller Shrub","Abelia x grandiflora (Glossy Abelia)","ABE|GRA",3.0],["Smaller Shrub","Berberis verruculosa (Warty Barberry)","BER|VER",3.0],["herbaceous","Gaultheria shallon (Salal)","GAU|SHA",3.0],["Smaller Shrub","Mahonia nervosa (Low (Cascade) Oregon-grape)","MAH|NER",3.0],["herbaceous","Polystichum munitum (Sword Fern)","POL|MUN",3.0],["Smaller Shrub","Vaccinium ovatum (Evergreen Huckleberry)","VAC|OVA",3.0],["Smaller Shrub","Ribes lacustre (Swamp or Black Gooseberry)","RIB|LAC",3.0],["Smaller Shrub","Rosa gymnocarpa (Bald-hip Rose)","ROS|GYM",3.0],["Smaller Shrub","Rubus spectabilis (Salmonberry)","RUB|SPE",3.0]];
+  var PRESETS = [["Tree","Abies grandis var. grandis (Coast Grand Fir)","ABI|GRA",10.0,[2,4]],["Tree","Arbutus unedo (Strawberry Tree)","ARB|UNE",10.0,[0,1,3,4]],["Tree","Calocedrus decurrens (Incense Cedar)","CAL|DEC",10.0,[2,4]],["Tree","Picea sitchensis (Sitka Spruce)","PIC|SIT",10.0,[4,7]],["Tree","Pinus contorta var. contorta (Shore Pine)","PIN|CON",10.0,[2,4,6]],["Tree","Pseudotsuga menziesii (Douglas-fir)","PSE|MEN",10.0,[2,4,5]],["Tree","Thuja plicata (Western Redcedar)","THU|PLI",10.0,[2,4,5]],["Tree","Acer circinatum (Vine Maple)","ACE|CIR",10.0,[0,1,2,8]],["Tree","Acer glabrum var. douglasii (Douglas Maple)","ACE|GLA",10.0,[0,1,2,8]],["Tree","Acer macrophyllum (Big-leaf Maple)","ACE|MAC",10.0,[0,1,2]],["Tree","Alnus rubra (Red Alder)","ALN|RUB",10.0,[1,2]],["Tree","Carpinus caroliniana (American Hornbeam)","CAR|CAR",10.0,[0]],["Tree","Carpinus japonica (Japanese Hornbeam)","CAR|JAP",10.0,[0]],["Tree","Cercis canadensis (Eastern Redbud)","CER|CAN",10.0,[0,1]],["Tree","Cercis occidentalis (Western Redbud)","CER|OCC",10.0,[0,1]],["Tree","Crataegus douglasii (Black or Western Hawthorn)","CRA|DOU",10.0,[0,2,3,4,5,6,7,8]],["Tree","Frangula (Rhamnus) purshiana (Cascara)","FRA|PUR",10.0,[0,1,2,3,8]],["Tree","Fraxinus latifolia (Oregon Ash)","FRA|LAT",10.0,[1,2]],["Tree","Malus fusca (Pacific Crabapple)","MAL|FUS",10.0,[0,1,2,3,4,6,7]],["Tree","Populus balsamifera ssp. trichocarpa (Black Poplar)","POP|BAL",10.0,[2,4,6,8]],["Tree","Prunus emarginata (Bitter Cherry)","PRU|EMA",10.0,[0,1,2,3,4,6]],["Tree","Prunus virginiana (Chokecherry)","PRU|VIR",10.0,[0,2,3,4,5,6,8]],["Tree","Salix hookeriana (Hooker Willow)","SAL|HOO",10.0,[0,1,2,4,5,6,8]],["Tree","Salix lucida ssp. lasiandra (Pacific Willow)","SAL|LUC",10.0,[0,1,2,4,6,8]],["Tree","Salix scouleriana (Scouler’s Willow)","SAL|SCO",10.0,[0,1,2,4,6,8]],["Tree","Salix sitchensis (Sitka Willow)","SAL|SIT",10.0,[0,1,2,4,6,8]],["Large Shrub","Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","ARB|UNECOM",8.0,[0,1,3,4,6]],["Large Shrub","Ceanothus thyrsiflorus 'Victoria' (California Lilac, Blue Blossom,)","CEA|THY",5.0,[0,1,2,4,5,6]],["Large Shrub","Elaeagnus pungens (Thorny Silverberry)","ELA|PUN",8.0,[0,1,3,4,6,7]],["Large Shrub","Morella (Myrica) californica (California or Pacific Wax Myrtle)","MOR|CAL",8.0,[0,2,3,4,5,6,8]],["Large Shrub","Osmanthus x burkwoodii (Burkwood Osmanthus)","OSM|BUR",8.0,[0,1,4,5]],["Large Shrub","Pittosporum heterophyllum (Chinese Pittosporum)","PIT|HET",8.0,[0,3,4,5]],["Large Shrub","Pyracantha coccinea (Scarlet Firethorn)","PYR|COC",8.0,[0,3,4,5,6,7]],["Large Shrub","Pyracantha fortuneana 'Graberi' (Graber's Firethorn)","PYR|FOR",8.0,[0,1,3,4,5,6,7]],["Large Shrub","Viburnum tinus (Laurustinus)","VIB|TIN",8.0,[0,1,3,4,5,6]],["Large Shrub","Amelanchier alnifolia (Western Serviceberry)","AME|ALN",8.0,[0,2,3,8]],["Large Shrub","Ceanothus sanguineus (Redstem Ceanothus)","CEA|SAN",5.0,[0,2]],["Large Shrub","Chaenomeles speciosa (Flowering Quince)","CHA|SPE",5.0,[0,1,3,4,5,6,7]],["Large Shrub","Cornus sericea (Yellow-Twig Dogwood)","COR|SER",8.0,[0,3,5,6,8]],["Large Shrub","Cornus sericea ssp. occidentalis (Red-osier Dogwood)","COR|SEROCC",8.0,[0,2,3,6,8]],["Large Shrub","Corylus cornuta (Beaked Hazel)","COR|COR",8.0,[1,3]],["Large Shrub","Holodiscus discolor (Oceanspray)","HOL|DIS",8.0,[0,2,8]],["Large Shrub","Lonicera involucrata (Black Twinberry)","LON|INV",5.0,[0,1,2,3,6,8]],["Large Shrub","Oemleria cerasiformis (Osoberry, Indian Plum)","OEM|CER",8.0,[0,1,3,6,8]],["Large Shrub","Philadelphus lewisii (Mock-orange)","PHI|LEW",5.0,[0,8]],["Large Shrub","Physocarpus capitatus (Pacific Ninebark)","PHY|CAP",8.0,[0,2,3,8]],["Large Shrub","Ribes sanguineum (Red-flowering Currant)","RIB|SAN",5.0,[0,1,2,3]],["Large Shrub","Sambucus caerulea (Blue Elderberry)","SAM|CAE",8.0,[0,2,3,6,8]],["Large Shrub","Sambucus racemosa (Red Elderberry)","SAM|RAC",8.0,[0,1,2,3,8]],["Large Shrub","Berberis darwinii (Darwin Barberry)","BER|DAR",5.0,[0,1,3,4,5,6,7]],["Large Shrub","Berberis julianae (Wintergreen Barberry)","BER|JUL",8.0,[0,1,3,4,5,6,7]],["Large Shrub","Mahonia aquifolium (Tall Oregon-grape)","MAH|AQU",5.0,[0,1,3,4,6,7,8]],["Large Shrub","Pittosporum tenuifolium (Tasman Ruffles' Pittosporum)","PIT|TEN",5.0,[0,4,5]],["Smaller Shrub","Aronia melanocarpa (Black chokeberry)","ARO|MEL",3.0,[0,3,5,6,8]],["Smaller Shrub","Berberis thunbergii var. atropurpurea (Purple Japanese Barberry)","BER|THU",3.0,[0,1,3,5,7]],["Smaller Shrub","Rhus aromatica 'Gro-Low' (Gro-Low Sumac)","RHU|ARO",3.0,[0,5]],["Smaller Shrub","Rhus trilobata (Skunkbush Sumac)","RHU|TRI",3.0,[0,4,5,6]],["Smaller Shrub","Ribes divaricatum (Coast Black Gooseberry)","RIB|DIV",3.0,[0,1,2,3,7,8]],["Smaller Shrub","Rosa nutkana (Nootka Rose)","ROS|NUT",3.0,[0,2,3,5,6,7,8]],["Smaller Shrub","Rosa pisocarpa (Clustered Wild Rose)","ROS|PIS",3.0,[0,2,3,5,6,7,8]],["Smaller Shrub","Rubus parviflorus (Thimbleberry)","RUB|PAR",3.0,[0,3,5,6,8]],["Smaller Shrub","Spiraea douglasii (Douglas Spirea)","SPI|DOU",3.0,[0,2,5,6,8]],["Smaller Shrub","Symphoricarpos albus (Snowberry)","SYM|ALB",3.0,[0,1,2,3,5,6,8]],["Smaller Shrub","Viburnum edule (Highbush Cranberry)","VIB|EDU",3.0,[0,2,3,8]],["Smaller Shrub","Viburnum opulus var. americanum (American Cranberrybush Viburnum)","VIB|OPU",3.0,[0,3,5]],["Smaller Shrub","Abelia x 'Edward Goucher' (Edward Goucher' Glossy Abelia)","ABE|EDW",3.0,[0,1,5]],["Smaller Shrub","Abelia x grandiflora (Glossy Abelia)","ABE|GRA",3.0,[0,1,5]],["Smaller Shrub","Berberis verruculosa (Warty Barberry)","BER|VER",3.0,[0,1,3,4,5,7]],["herbaceous","Gaultheria shallon (Salal)","GAU|SHA",3.0,[0,1,2,3,4,5,6,8]],["Smaller Shrub","Mahonia nervosa (Low (Cascade) Oregon-grape)","MAH|NER",3.0,[0,1,3,5,8]],["herbaceous","Polystichum munitum (Sword Fern)","POL|MUN",3.0,[4,5]],["Smaller Shrub","Vaccinium ovatum (Evergreen Huckleberry)","VAC|OVA",3.0,[0,1,2,3,5]],["Smaller Shrub","Ribes lacustre (Swamp or Black Gooseberry)","RIB|LAC",3.0,[0,1,2,3,5,6,7]],["Smaller Shrub","Rosa gymnocarpa (Bald-hip Rose)","ROS|GYM",3.0,[0,2,3,5,7]],["Smaller Shrub","Rubus spectabilis (Salmonberry)","RUB|SPE",3.0,[0,1,3,7,8]]];
+  var TRAITS = ['Pollinator-attracting', 'Shoulder-season blooming (September to May)', 'Larval hosts', 'Fruit, berries, nuts', 'Dense foliage', 'Foliage at lower & ground levels', 'Thicket-forming / dense woody structure', 'Thorns, prickles or spurs', 'Soil-binding / erosion control'];
+  var prAnchor = null;
   var prDlg = $('presetDlg'), picked = {}, ENTRY = {}, prOpen = {u:false, n:false};
   // every choosable plant, keyed: 'n<i>' for Native Plant Salvage Foundation, 'u<list>_<j>' for user presets
   function nativeEntry(i){ var p = PRESETS[i]; return {key:'n' + i, name:p[1], label:String(p[2]).replace(/\\n|\|/g, '\n').split('\n').slice(0, 2).join('\n'), d:p[3], layer:layerKey(p[0])}; }
@@ -998,29 +1010,38 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     ENTRY = {};
     var shown = 0;
     function matches(e){ return !q || (e.name + ' ' + (e.label || (e.tpl && e.tpl.label) || '')).toLowerCase().indexOf(q) >= 0; }
-    function group(title, entries, extra, show){
+    function group(title, entries, extra, show, rows){
       var vis = entries.filter(matches);
       if(!vis.length) return false;
       vis.forEach(function(e){ ENTRY[e.key] = e; });
       if(!show) return true;
-      var h = document.createElement('label'); h.className = 'prh';
-      var all = document.createElement('input'); all.type = 'checkbox';
-      all.setAttribute('aria-label', 'Select all ' + title + ' shown');
-      var avail = vis.filter(function(e){ return !inMenu(e); });
-      all.checked = avail.length > 0 && avail.every(function(e){ return picked[e.key]; });
-      all.disabled = !avail.length;
-      all.onchange = function(){ avail.forEach(function(e){ picked[e.key] = all.checked; }); renderPresets(); prCountUpdate(); };
+      var gid = title + '|' + vis[0].key.charAt(0);
+      var h = document.createElement('div'); h.className = 'prh';
       var tn = document.createElement('span'); tn.className = 'prn'; tn.textContent = title;
-      h.appendChild(all); h.appendChild(tn);
+      h.appendChild(tn);
       if(extra) extra(h);
+      // clicking anywhere on a collapsible header opens or closes it
+      var tgl = h.querySelector('.prx');
+      if(tgl){ h.classList.add('prclick'); h.onclick = function(ev){ if(ev.target !== tgl && !ev.target.closest('.x')) tgl.click(); }; }
       box.appendChild(h);
-      vis.forEach(function(e){
+      if(rows !== false) vis.forEach(function(e, idx){
         var off = inMenu(e);
         var row = document.createElement('label'); row.className = 'pri' + (off ? ' off' : '');
         var cb = document.createElement('input'); cb.type = 'checkbox'; cb.disabled = off; cb.checked = off || !!picked[e.key];
-        cb.onchange = function(){ picked[e.key] = cb.checked; renderPresets(); prCountUpdate(); };
+        // click toggles one plant; Shift-click sets every plant between it and the last one clicked in this list
+        row.addEventListener('click', function(ev){
+          ev.preventDefault();
+          if(off) return;
+          var val = !picked[e.key];
+          if(ev.shiftKey && prAnchor && prAnchor.gid === gid){
+            var lo = Math.min(prAnchor.idx, idx), hi = Math.max(prAnchor.idx, idx);
+            for(var k = lo; k <= hi; k++){ if(!inMenu(vis[k])) picked[vis[k].key] = val; }
+          } else picked[e.key] = val;
+          prAnchor = {gid:gid, idx:idx};
+          renderPresets(); prCountUpdate();
+        });
         var nm = document.createElement('span'); nm.textContent = e.name + (off ? ' (in menu)' : '');
-        var sz = document.createElement('small'); sz.textContent = e.d + ' ft';
+        var sz = document.createElement('small'); sz.textContent = e.d + ' ft spacing';
         row.appendChild(cb); row.appendChild(nm); row.appendChild(sz); box.appendChild(row);
         shown++;
       });
@@ -1065,11 +1086,39 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     // Native Plant Salvage Foundation presets, by layer
     var nt = top('Native Plant Salvage Foundation', 'n'), anyN = false;
+    function subhead(text){
+      if(!nt.open) return null;
+      var d = document.createElement('div'); d.className = 'prsubh'; d.textContent = text; box.appendChild(d); return d;
+    }
+    function dropIfEmpty(d){ if(d && d === box.lastChild) d.remove(); }
+    // collapsible sub-list: header shows a plant-count button that opens and closes it
+    function toggler(name, entries, key, open){
+      return function(h){
+        var tg = document.createElement('button'); tg.type = 'button'; tg.className = 'prx';
+        tg.setAttribute('aria-expanded', open ? 'true' : 'false');
+        tg.setAttribute('aria-label', (open ? 'Hide ' : 'Show ') + name + ' plants');
+        tg.textContent = entries.filter(function(e){ return !q || (e.name + ' ' + e.label).toLowerCase().indexOf(q) >= 0; }).length + ' plants';
+        tg.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); prOpen[key] = !open; renderPresets(); };
+        h.appendChild(tg);
+      };
+    }
+    var sh1 = subhead('By layer');
     LAYERS.forEach(function(l){
       var entries = [];
       PRESETS.forEach(function(p, i){ if(layerKey(p[0]) === l[0]) entries.push(nativeEntry(i)); });
-      if(group(l[1], entries, null, nt.open)) anyN = true;
+      var open = !!q || !!prOpen['l' + l[0]];
+      if(group(l[1], entries, toggler(l[1], entries, 'l' + l[0], open), nt.open, open)) anyN = true;
     });
+    dropIfEmpty(sh1);
+    var sh2 = subhead('By plant characteristic');
+    TRAITS.forEach(function(name, ti){
+      var entries = [];
+      PRESETS.forEach(function(p, i){ if((p[4] || []).indexOf(ti) >= 0) entries.push(nativeEntry(i)); });
+      var open = !!q || !!prOpen['t' + ti];
+      var made = group(name, entries, toggler(name, entries, 't' + ti, open), nt.open, open);
+      if(made) anyN = true;
+    });
+    dropIfEmpty(sh2);
     if(!anyN) nt.el.remove();
     else { var cn = selCount('n'); nt.sel.textContent = cn ? cn + ' selected' : (nt.open ? '' : PRESETS.length + ' plants'); }
     if(collapsible && !ut.open && !nt.open) shown = 1; // sections are collapsed, not empty
@@ -1083,12 +1132,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     return all[state.tpls.length % all.length];
   }
   $('presetBtn').onclick = function(){
-    picked = {}; prOpen = {u:false, n:false}; $('prFind').value = ''; renderPresets(); prCountUpdate(); prDlg.showModal(); $('prList').scrollTop = 0;
+    picked = {}; prAnchor = null; prOpen = {u:false, n:false}; $('prFind').value = ''; renderPresets(); prCountUpdate(); prDlg.showModal(); $('prList').scrollTop = 0;
   };
-  $('prFind').oninput = renderPresets;
+  $('prFind').oninput = function(){ prAnchor = null; renderPresets(); };
   $('prClose').onclick = function(){ prDlg.close(); };
   prDlg.addEventListener('click', function(e){ if(e.target === prDlg) prDlg.close(); });
-  $('prNone').onclick = function(){ picked = {}; renderPresets(); prCountUpdate(); };
+  $('prNone').onclick = function(){ picked = {}; prAnchor = null; renderPresets(); prCountUpdate(); };
   $('prAdd').onclick = function(){
     // keep the order the plants appear in the popup; skip duplicates by name
     var order = Object.keys(ENTRY), seenName = {}, added = 0;

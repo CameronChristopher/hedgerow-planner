@@ -76,9 +76,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .pat svg{width:34px;height:34px}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
 .stage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;color:var(--muted)}
-.size{display:flex;gap:6px;align-items:center}
+.size{display:flex;gap:6px;align-items:center;flex-wrap:wrap;row-gap:8px}
+.szlab{white-space:nowrap}
+#moreBtn{white-space:nowrap}
 .size input{width:54px;padding:6px 4px;text-align:center}
-#moreBtn{margin-left:8px}
+
 .layers{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;font-size:13px;color:var(--muted)}
 .chip{padding:5px 11px;border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:var(--panel);font-size:13px}
 .chip[aria-pressed=false]{background:transparent;color:var(--muted);border-color:var(--line);text-decoration:line-through}
@@ -106,6 +108,11 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 #about .cap{font-size:14px}
 #about .cap small{font-size:13px}
 #infoDlg .fbtype label{font-size:15.5px}
+#infoDlg .db li{font-size:15.5px;line-height:1.6;margin:0 0 6px}
+.logu{padding:14px 0 6px;border-top:1px solid var(--line);margin-top:12px}
+.logu:first-of-type{border-top:0;margin-top:0}
+.logu h3{font-size:16.5px;margin:0 0 8px}
+.logu ul{margin:0;padding-left:20px}
 #infoDlg .db .sub{font-size:14px}
 #about .tab,#infoDlg .tab{font-size:15px}
 .db ul{margin:6px 0;padding-left:20px}
@@ -233,7 +240,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
   <aside>
     <div class="box">
       <h1>Hedgerow Planner</h1>
-      <p class="sub">Add plants, set their spacing circle size, and drag them into place to design your planting diagram</p>
+      <p class="sub">Create a hedgerow block, add spacing circles for each plant, and arrange them to design your planting diagram</p>
       <div class="row" style="margin-top:10px">
         <button class="btn" id="learn">Tips &amp; Templates</button>
         <button class="btn" id="aboutBtn">About</button>
@@ -289,7 +296,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <button class="btn ibtn" id="planOpen"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 6.812a15 15 0 0 1 2.556-2.655A.7.7 0 0 1 12 4m3 2.812a15 15 0 0 0-2.556-2.655A.7.7 0 0 0 12 4m0 0v11"/></svg><svg class="ico folder-tpl" hidden aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.961 9.997c-.289-.017-.647-.017-1.102-.017H8.445c-.875 0-1.313 0-1.68.151a2 2 0 0 0-.82.627c-.242.314-.357.736-.587 1.581L4.1 16.96c-.374 1.374-.561 2.061-.402 2.604a2 2 0 0 0 .963 1.192m16.3-10.758c.39.023.654.078.861.205.317.194.55.5.655.856.119.407-.021.922-.302 1.952l-.89 3.271c-.46 1.69-.69 2.535-1.175 3.163a4 4 0 0 1-1.64 1.253c-.733.303-1.61.303-3.36.303H7.187c-1.338 0-2.047 0-2.527-.245m16.3-10.758c-.047-.783-.155-1.339-.397-1.813a4 4 0 0 0-1.748-1.748C17.96 6 16.84 6 14.6 6h-1.316c-.47 0-.704 0-.917-.065a1.5 1.5 0 0 1-.517-.276c-.172-.142-.302-.337-.562-.728l-.575-.862c-.261-.391-.391-.586-.563-.728a1.5 1.5 0 0 0-.517-.276C9.42 3 9.185 3 8.716 3H8.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C2 6.04 2 7.16 2 9.4v5.2c0 2.24 0 3.36.436 4.216a4 4 0 0 0 1.748 1.748q.224.114.477.19"/></svg>Open plan file</button>
         <input type="file" id="planFile" accept=".json,application/json" hidden>
       </div>
-      <p class="sub explain" id="planMsg" role="status" style="margin-top:8px">A plan file holds your bed, plant menu and saved layouts, so you can back them up or move them to another computer.</p>
+      <p class="sub explain" id="planMsg" role="status" style="margin-top:8px">A plan file holds your block plan, plant menu and saved layouts, so you can back them up or move them to another computer.</p>
     </div>
   </aside>
   <div class="split" id="split" role="separator" aria-orientation="vertical" aria-label="Resize the diagram panel" tabindex="0" title="Drag to resize. Double-click to reset."></div>
@@ -312,9 +319,9 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       </label>
     </div>
     <div class="stage-head">
-      <div class="size">Bed size
-        <input type="number" id="bw" min="4" max="60" step="1" aria-label="Bed width in feet"> ×
-        <input type="number" id="bh" min="4" max="60" step="1" aria-label="Bed height in feet"> ft
+      <div class="size"><span class="szlab">Block plan size</span>
+        <input type="number" id="bw" min="4" max="60" step="1" aria-label="Block plan width in feet"> ×
+        <input type="number" id="bh" min="4" max="60" step="1" aria-label="Block plan height in feet"> <span style="margin-right:8px">ft</span>
         <button class="btn" id="moreBtn" aria-expanded="false" aria-controls="moreBox">More options</button>
       </div>
       <div class="row">
@@ -412,7 +419,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       <tr><td>Diameter</td><td>Spacing circle diameter in feet, such as 6 or 2.5</td></tr>
       <tr><td>Layer</td><td>Trees, Large shrubs, Small shrubs, Herbaceous, or the name of a layer you created</td></tr>
     </table>
-    <p>Colors and patterns are assigned automatically, and you can change them after adding a plant to the bed. Plants are added to your current menu. Rows with a missing or invalid diameter or layer are skipped.</p>
+    <p>Colors and patterns are assigned automatically, and you can change them after adding a plant to the block plan. Plants are added to your current menu. Rows with a missing or invalid diameter or layer are skipped.</p>
     <pre>Menu label,Display label,Text size,Diameter,Layer
 Shore Pine,PIN|CON,,10,Trees
 Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
@@ -463,11 +470,23 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   <div class="tabs" role="tablist" aria-label="About sections">
     <button class="tab" role="tab" id="infoTabDonate" data-info="donate" aria-selected="true" aria-controls="infoDonate">Donate</button>
     <button class="tab" role="tab" id="infoTabFb" data-info="fb" aria-selected="false" aria-controls="infoFb">Feedback</button>
+    <button class="tab" role="tab" id="infoTabLog" data-info="log" aria-selected="false" aria-controls="infoLog">Changelog</button>
   </div>
   <div class="db" id="infoDonate" role="tabpanel" aria-labelledby="infoTabDonate" style="padding-top:14px">
     <p>The Native Plant Salvage Project was started in 1994 to involve Thurston County residents in direct action to protect water resources and improve habitat. Our mission is to provide hands-on education to protect and conserve water resources and habitat from the South Sound prairies to the shores of the Salish Sea.</p>
     <p style="margin-top:16px"><a class="btn primary" href="https://donorbox.org/support-the-native-plant-salvage" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block">Donate to the Native Plant Salvage Foundation</a></p>
     <p class="sub">Opens the foundation’s donation page in a new tab.</p>
+  </div>
+  <div class="db" id="infoLog" role="tabpanel" aria-labelledby="infoTabLog" style="padding-top:6px" hidden>
+    <p class="sub explain" style="margin-top:8px">What’s new and what’s changed in the planner, newest first.</p>
+    <section class="logu">
+      <h3>November 7, 2026 update</h3>
+      <ul>
+        <li>Added this changelog to the About window, so you can see what’s new each time the planner is updated.</li>
+        <li>Loading a saved layout now offers to add any of its plants that aren’t in your Add a plant menu, so you can place more of them and update them later.</li>
+        <li>The planting area is now called the “block plan” throughout, instead of “bed.”</li>
+      </ul>
+    </section>
   </div>
   <div class="db" id="infoFb" role="tabpanel" aria-labelledby="infoTabFb" style="padding-top:14px" hidden>
     <p style="margin-top:0">Found something that isn’t working, or have an idea to make the planner better? Let us know.</p>
@@ -1033,7 +1052,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
           x.setAttribute('aria-label', 'Delete user preset ' + pl.name); x.title = 'Delete this saved list';
           x.onclick = function(ev){
             ev.preventDefault(); ev.stopPropagation();
-            ask('Delete “' + pl.name + '”?', 'This removes the saved list from User presets. Plants already in your menu or on the bed are not affected.', 'Delete', function(){
+            ask('Delete “' + pl.name + '”?', 'This removes the saved list from User presets. Plants already in your menu or on the block plan are not affected.', 'Delete', function(){
               state.plantLists.splice(li, 1); picked = {}; save(); renderPresets(); prCountUpdate(); renderLayerUi();
             });
           };
@@ -1341,17 +1360,46 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       render();
     }
   });
+  // ---- after loading a layout, offer to add its plants that are missing from the menu ----
+  function plantName(o){ return String(o.menu || o.label || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+  function offerLayoutPlants(layoutName){
+    var missing = [], seen = {};
+    state.items.forEach(function(it){
+      // already linked to a menu plant
+      if(it.src && state.tpls.some(function(t){ return t.id === it.src; })) return;
+      // same plant in the menu under another id: relink quietly
+      var nm = plantName(it), match = state.tpls.filter(function(t){ return plantName(t) === nm; })[0];
+      if(match){ it.src = match.id; return; }
+      var key = it.src || ('name:' + nm);
+      if(seen[key]){ seen[key].push(it); return; }
+      seen[key] = [it]; missing.push(key);
+    });
+    save();
+    if(!missing.length) return;
+    var n = missing.length, label = n === 1 ? '1 plant' : n + ' plants';
+    ask('Add plants to your menu?', 'Append ' + label + ' from “' + layoutName + '” to your Add a plant menu? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
+      missing.forEach(function(key){
+        var group = seen[key], first = group[0];
+        var t = {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null};
+        if(!LAYERS.some(function(l){ return l[0] === t.layer; })) t.layer = 'herb';
+        group.forEach(function(it){ it.src = t.id; });
+        state.tpls.push(t);
+      });
+      render();
+      $('csvMsg').textContent = 'Added ' + label + ' from “' + layoutName + '” to your menu.';
+    });
+  }
   // ---- saved layouts ----
   function renderLayouts(){
     var b = $('layouts'); b.innerHTML = '';
     var L = state.layouts || [];
-    if(!L.length){ b.innerHTML = '<p class="sub explain">Name and save the current bed to reuse it later.</p>'; return; }
+    if(!L.length){ b.innerHTML = '<p class="sub explain">Name and save the current block plan to reuse it later.</p>'; return; }
     L.forEach(function(lay, i){
       var r = document.createElement('div'); r.className = 'lay';
       var n = document.createElement('span'); n.textContent = lay.name + ' (' + lay.items.length + ')';
       var ld = document.createElement('button'); ld.className = 'btn ibtn'; var fsvg = document.querySelector('svg.folder-tpl').cloneNode(true); fsvg.removeAttribute('hidden'); fsvg.classList.remove('folder-tpl'); ld.appendChild(fsvg); ld.appendChild(document.createTextNode('Load'));
       ld.onclick = function(){
-        if(state.items.length) ask('Replace current bed?', 'Replace the current bed with “'+lay.name+'”?', 'Replace', doLoad); else doLoad();
+        if(state.items.length) ask('Replace current block plan?', 'Replace the current block plan with “'+lay.name+'”?', 'Replace', doLoad); else doLoad();
       };
       function doLoad(){
         var c = JSON.parse(JSON.stringify(lay));
@@ -1359,6 +1407,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         ['cell','major','scale','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
         state.nextId = Math.max(state.nextId, state.items.reduce(function(m,x){ return Math.max(m,x.id); },0)+1);
         render();
+        offerLayoutPlants(lay.name);
       };
       var x = document.createElement('button'); x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label','Delete layout '+lay.name);
       x.onclick = function(){ state.layouts.splice(i,1); save(); renderLayouts(); };
@@ -1430,7 +1479,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var o; try{ o = JSON.parse(String(rd.result)); }catch(e){ o = null; }
       var p = o && o.plan;
       if(!p || !Array.isArray(p.items) || !(p.w > 0) || !(p.h > 0)){ say('That file is not a Hedgerow Planner plan file.', 'planMsg'); return; }
-      ask('Open plan file?', 'Opening “' + f.name + '” replaces your current bed, plant menu and saved layouts. Save a plan file first if you want to keep them.', 'Open plan', function(){
+      ask('Open plan file?', 'Opening “' + f.name + '” replaces your current block plan, plant menu and saved layouts. Save a plan file first if you want to keep them.', 'Open plan', function(){
         var keep = {split:state.prefs && state.prefs.side};
         state = Object.assign({vis:{trees:true,large:true,small:true,herb:true}, tpls:[], layouts:[], icons:{}, prefs:{auto:false, fs:14}}, p);
         if(keep.split && !state.prefs.side) state.prefs.side = keep.split;
@@ -1651,7 +1700,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   var info = $('infoDlg'), FB_TO = 'cameron@nativeplantsalvage.org';
   function infoTab(name){
     document.querySelectorAll('#infoDlg .tab').forEach(function(t){ t.setAttribute('aria-selected', t.dataset.info === name ? 'true' : 'false'); });
-    $('infoDonate').hidden = name !== 'donate'; $('infoFb').hidden = name !== 'fb';
+    $('infoDonate').hidden = name !== 'donate'; $('infoFb').hidden = name !== 'fb'; $('infoLog').hidden = name !== 'log';
   }
   document.querySelectorAll('#infoDlg .tab').forEach(function(t){ t.onclick = function(){ infoTab(t.dataset.info); }; });
   $('aboutBtn').onclick = function(){ infoTab('donate'); info.showModal(); };

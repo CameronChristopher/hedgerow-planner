@@ -498,7 +498,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         <li>Presets now has a “By plant characteristic” section under the Native Plant Salvage Foundation, with lists such as Pollinator-attracting, Larval hosts and Soil-binding, so you can pick plants by what they do in a hedgerow.</li>
         <li>More options has a new Display options group with a “Show common names in key” switch. It’s off to start, so the key lists plants by scientific name; turn it on to include common names.</li>
         <li>Scientific (Latin) plant names are now shown in italics in the plant menu, Presets, the key and exports.</li>
+        <li>In the spacing diagram, the key now shows how many of each plant are on the block plan inside its color swatch, and the swatches use a finer pattern so dots and stripes are easy to see. The planting diagram key still shows the count after the name.</li>
+        <li>Fixed: pressing Delete sometimes didn’t remove the selected circle after you’d been editing a label or ticking a setting.</li>
         <li>Italics now recognize over 800 plant genera, not just the ones in Presets, so names you type like <i>Quercus garryana</i> are italicized automatically.</li>
+        <li>The Dashes pattern is replaced by Holes: a light fill with dots in the plant’s color. Plants that used Dashes switch to Holes automatically.</li>
       </ul>
     </section>
   </div>
@@ -544,7 +547,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     ['Indigo','#332288'],['Cyan','#88CCEE'],['Teal','#44AA99'],['Green','#117733'],['Olive','#999933'],
     ['Sand','#DDCC77'],['Rose','#CC6677'],['Wine','#882255'],['Purple','#AA4499']
   ];
-  var PATTERNS = [['solid','Solid'],['vert','Vertical'],['dots','Dots'],['grid','Grid'],['horiz','Horizontal'],['dashes','Dashes']];
+  var PATTERNS = [['solid','Solid'],['vert','Vertical'],['dots','Dots'],['grid','Grid'],['horiz','Horizontal'],['holes','Holes']];
   var LAYERS = [['trees','Trees'],['large','Large shrubs'],['small','Small shrubs'],['herb','Herbaceous']], BASE_LAYERS = LAYERS.length;
   var EXAMPLE = {label:'Tomato', d:2, color:'#CC6677', pattern:'solid', layer:'herb'};
   var KEY = 'garden-plan-v2';
@@ -558,9 +561,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   state.tpls.forEach(function(t){ if(!t.id) t.id = uid(); });
   // the old diagonal Hatch pattern became Vertical
   function migratePatterns(){
-    function fix(o){ if(o && o.pattern === 'hatch') o.pattern = 'vert'; }
+    function fix(o){ if(o && o.pattern === 'hatch') o.pattern = 'vert'; if(o && o.pattern === 'dashes') o.pattern = 'holes'; }
     (state.items || []).forEach(fix); (state.tpls || []).forEach(fix);
     (state.layouts || []).forEach(function(l){ (l.items || []).forEach(fix); });
+    (state.plantLists || []).forEach(function(l){ (l.tpls || []).forEach(fix); });
   }
   migratePatterns();
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} record(); }
@@ -604,27 +608,25 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   }
   function pid(color, pat){ return 'p'+color.slice(1)+'-'+pat; }
   function fillFor(it){ return it.pattern === 'solid' ? it.color : 'url(#'+pid(it.color,it.pattern)+')'; }
+  function keyFill(it){ return it.pattern === 'solid' ? it.color : 'url(#k'+pid(it.color,it.pattern)+')'; }
 
   // Build all 36 pattern fills once
   var defs = $('defs');
   COLORS.forEach(function(c){
     PATTERNS.forEach(function(p){
-      var T = p[0]==='dashes' ? 36 : (p[0]==='vert' || p[0]==='horiz') ? 8 : 10;
+      var T = (p[0]==='vert' || p[0]==='horiz') ? 8 : 10;
       var pt = el('pattern',{id:pid(c[1],p[0]),width:T,height:T,patternUnits:'userSpaceOnUse'});
-      pt.appendChild(el('rect',{width:T,height:T,fill:c[1]}));
       var L = light(c[1]);
+      pt.appendChild(el('rect',{width:T,height:T,fill: p[0]==='holes' ? L : c[1]}));
       if(p[0]==='dots') pt.appendChild(el('circle',{cx:5,cy:5,r:1.9,fill:L}));
-      if(p[0]==='dashes'){
-        var sd = 11, rnd = function(){ sd = (sd*9301+49297)%233280; return sd/233280; };
-        for(var q=0;q<9;q++){
-          var cx = (q%3+0.5)*36/3 + (rnd()-0.5)*1.6, cy = (Math.floor(q/3)+0.5)*36/3 + (rnd()-0.5)*1.6, a = Math.round(rnd()*180);
-          pt.appendChild(el('rect',{x:cx-4,y:cy-1.2,width:8,height:2.4,rx:1.2,fill:L,transform:'rotate('+a+' '+cx+' '+cy+')'}));
-        }
-      }
+      if(p[0]==='holes') pt.appendChild(el('circle',{cx:5,cy:5,r:2.4,fill:c[1]}));
       if(p[0]==='grid') pt.appendChild(el('path',{d:'M0 0H10M0 0V10',stroke:L,'stroke-width':1.4,fill:'none'}));
       if(p[0]==='vert') pt.appendChild(el('path',{d:'M4 0V8',stroke:L,'stroke-width':2.2,fill:'none'}));
       if(p[0]==='horiz') pt.appendChild(el('path',{d:'M0 4H8',stroke:L,'stroke-width':2.2,fill:'none'}));
       defs.appendChild(pt);
+      // a finer copy for the small key swatches, so dots and stripes still read as a pattern
+      var kp = pt.cloneNode(true); kp.setAttribute('id', 'k' + pid(c[1], p[0])); kp.setAttribute('patternTransform', 'scale(0.6)');
+      defs.appendChild(kp);
     });
   });
 
@@ -862,6 +864,22 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     return at;
   }
+  // Count of a plant on the block plan, drawn inside its key circle in black or white, whichever contrasts more
+  function inkFor(hex){
+    var n = parseInt(String(hex || '#888888').slice(1), 16);
+    var c = [n >> 16, (n >> 8) & 255, n & 255].map(function(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    var L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    if({'#999933':1, '#cc6677':1}[String(hex).toLowerCase()]) return '#ffffff';   // olive and rose read better with white
+    return (L + 0.05) / 0.05 >= 1.05 / (L + 0.05) ? '#000000' : '#ffffff';
+  }
+  function countMark(color, n, x, y, font, pattern){
+    var ink = pattern === 'holes' ? '#000000' : inkFor(color), halo = ink === '#000000' ? '#ffffff' : '#000000';
+    var g = el('g', {});
+    var t = el('text', {x:x, y:y, 'text-anchor':'middle', 'dominant-baseline':'central', 'font-size': n >= 100 ? 10 : (n >= 10 ? 12 : 13), 'font-weight':700,
+      fill:ink, stroke:halo, 'stroke-opacity':0.65, 'stroke-width':1.4, 'paint-order':'stroke', 'stroke-linejoin':'round'});
+    if(font && font !== 'inherit') t.setAttribute('font-family', font);
+    t.textContent = n; g.appendChild(t); return g;
+  }
   // Key label: the menu label, minus the common name in its final (parentheses) unless that option is on (off by default)
   function stripCommon(t){
     t = t.replace(/\s+$/, '');
@@ -892,11 +910,11 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var ul = document.createElement('div'); ul.className = 'kl';
       grp.forEach(function(e){
         var row = document.createElement('div'); row.className = 'ki';
-        var sv = el('svg',{width:24, height:24, viewBox:'-12 -12 24 24', 'aria-hidden':'true'});
+        var sv = el('svg',{width:28, height:28, viewBox:'-14 -14 28 28', 'aria-hidden':'true'});
         if(state.view === 'planting') iconParts(icons[plantKey(e.it)], e.it.color, 0, 0, 9).forEach(function(n){ sv.appendChild(n); });
-        else sv.appendChild(el('circle',{r:10, fill:fillFor(e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2}));
+        else { sv.appendChild(el('circle',{r:13, fill:keyFill(e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); sv.appendChild(countMark(e.it.color, e.n, 0, 0, 'inherit', e.it.pattern)); }
         var name = document.createElement('span'); appendSci(name, keyName(e.it), e.it.ital, fullName(e.it));
-        if(e.n > 1){ var c = document.createElement('small'); c.textContent = ' ×' + e.n; name.appendChild(c); }
+        if(e.n > 1 && state.view === 'planting'){ var c = document.createElement('small'); c.textContent = ' ×' + e.n; name.appendChild(c); }
         row.appendChild(sv); row.appendChild(name); ul.appendChild(row);
       });
       g.appendChild(ul); cols[gi < at ? 0 : 1].appendChild(g);
@@ -1409,6 +1427,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   function startDrag(e, it){
     e.preventDefault();
+    // clicking a circle takes keyboard focus away from any form field, so Delete and arrow keys act on the circle
+    var ae = document.activeElement;
+    if(ae && ae !== document.body && ae.blur && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(ae.tagName)) ae.blur();
     state.sel = it.id;
     var start = pt(e), ox = it.x, oy = it.y, moved = false, g = e.currentTarget;
     svg.appendChild(g); // on top while dragging; render() restores the normal stacking on release
@@ -1477,7 +1498,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   $('undo').onclick = undo; $('redo').onclick = redo;
   document.addEventListener('keydown', function(e){
     if(document.querySelector('dialog[open]')) return;
-    var tag = (document.activeElement||{}).tagName, typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+    // only text entry blocks the shortcuts; checkboxes, sliders and buttons don't
+    var ae = document.activeElement || {}, tag = ae.tagName;
+    var typing = tag === 'TEXTAREA' || tag === 'SELECT' || ae.isContentEditable || (tag === 'INPUT' && /^(text|number|email|search|url|tel|password)$/i.test(ae.type || 'text'));
     var mod = e.ctrlKey || e.metaKey, key = (e.key || '').toLowerCase();
     if(mod && !typing && key === 'z'){ e.preventDefault(); if(e.shiftKey) redo(); else undo(); return; }
     if(mod && !typing && key === 'y'){ e.preventDefault(); redo(); return; }
@@ -1658,8 +1681,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     // measure each group
     groups.forEach(function(G){
-      G.rows = G.grp.map(function(e){ var ws = sciWords(keyName(e.it), e.it.ital, fullName(e.it)); if(e.n > 1) ws.push({w:'\u00d7' + e.n, i:false}); return {e:e, ls:wrapWords(ws)}; });
-      G.h = 24 + G.rows.reduce(function(sum, r){ return sum + (r.ls.length > 1 ? 38 : 28); }, 0) + 16;
+      G.rows = G.grp.map(function(e){ var ws = sciWords(keyName(e.it), e.it.ital, fullName(e.it)); if(e.n > 1 && state.view === 'planting') ws.push({w:'\u00d7' + e.n, i:false}); return {e:e, ls:wrapWords(ws)}; });
+      G.h = 24 + G.rows.reduce(function(sum, r){ return sum + (r.ls.length > 1 ? 40 : 32); }, 0) + 16;
     });
     var split = ncol === 2 ? keySplit(groups, 84) : groups.length;
     var colY = [y0, y0];
@@ -1669,11 +1692,11 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       y += 24;
       var listTop = y;
       G.rows.forEach(function(r){
-        if(state.view === 'planting') iconParts(icons[plantKey(r.e.it)], r.e.it.color, cx + 26, y + 12, 9).forEach(function(n){ g.appendChild(n); });
-        else g.appendChild(el('circle',{cx:cx + 26, cy:y + 12, r:10, fill:fillFor(r.e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2}));
+        if(state.view === 'planting') iconParts(icons[plantKey(r.e.it)], r.e.it.color, cx + 27, y + 13, 9).forEach(function(n){ g.appendChild(n); });
+        else { g.appendChild(el('circle',{cx:cx + 27, cy:y + 13, r:13, fill:keyFill(r.e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); g.appendChild(countMark(r.e.it.color, r.e.n, cx + 27, y + 13, FF, r.e.it.pattern)); }
         var t = el('text',{'font-family':FF, 'font-size':13, fill:'#1f2328'});
         r.ls.forEach(function(ln, j){
-          var ts = el('tspan',{x:cx + 44, y:y + 16 + j*15});
+          var ts = el('tspan',{x:cx + 48, y:y + 17 + j*15});
           ln.forEach(function(o, k){
             var part = el('tspan', o.i ? {'font-style':'italic'} : {});
             part.textContent = (k ? ' ' : '') + o.w; ts.appendChild(part);
@@ -1681,7 +1704,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
           t.appendChild(ts);
         });
         g.appendChild(t);
-        y += r.ls.length > 1 ? 38 : 28;
+        y += r.ls.length > 1 ? 40 : 32;
       });
       g.appendChild(el('line',{x1:cx + 3, y1:listTop - 2, x2:cx + 3, y2:y - 4, stroke:'#d9dce0', 'stroke-width':2, 'stroke-linecap':'round'}));
       colY[col] = y + 16;

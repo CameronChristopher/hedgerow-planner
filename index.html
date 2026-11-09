@@ -52,6 +52,14 @@ button{cursor:pointer}
 .pmore{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:2;font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .pmore[hidden]{display:none}
 .prow{display:flex;gap:4px}
+.mh{cursor:grab;user-select:none;-webkit-user-select:none}
+.mh:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.plants .plant{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.plants.sorting, .plants.sorting *{cursor:grabbing !important}
+.mgrp.dragging{background:var(--soil);border-radius:8px;outline:1px dashed var(--line)}
+.mgrp.dragging .mh{background:var(--soil)}
+.prow.dragging .plant{background:var(--soil);color:var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.18);border-color:var(--ink)}
+.prow.dragging .x{visibility:hidden}
 .plant{flex:1;display:flex;align-items:center;gap:8px;padding:6px 9px;border:1px solid var(--line);background:transparent;border-radius:8px;text-align:left;font-size:13px}
 .plant:hover{border-color:var(--accent)}
 .plant small{color:var(--muted);margin-left:auto}
@@ -129,6 +137,8 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 .mh{font-size:12px;font-weight:600;color:var(--muted);margin:8px 0 0;position:sticky;top:0;z-index:1;background:var(--panel);padding:2px 0}
 .lay{display:flex;gap:6px;align-items:center;margin-bottom:6px;font-size:13px}
 .lay span{flex:1;min-width:0;overflow-wrap:anywhere}
+.layh{font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 6px}
+.layh:first-child{margin-top:0}
 .db img{width:66%;max-width:100%;height:auto;display:block;margin:14px auto;border-radius:8px}
 .tabs{display:flex;flex-wrap:wrap;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--bg)}
 .tab{font:inherit;font-size:14px;padding:10px 12px;border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);cursor:pointer;text-decoration:none}
@@ -168,7 +178,11 @@ dialog::backdrop{background:rgba(0,0,0,.55)}
 .ddadd{display:flex;gap:6px;margin:10px 0 4px}
 .ddadd input{flex:1;min-width:0;padding:6px 8px}
 .vsel{display:flex;align-items:center;gap:6px;margin:0;font-size:13px}
-.vsel select{width:auto;padding:7px 10px;color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px;background:var(--panel)}
+.seg button{border:0;background:transparent;border-radius:6px;padding:6px 12px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-checked=true]{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .key{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:0 28px;align-items:start}
 .kcol{min-width:0}
 @media (max-width:560px){.key{grid-template-columns:1fr}}
@@ -323,9 +337,11 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
           <p class="ddnote" id="layerMsg" role="status"></p>
         </div>
       </details>
-      <label class="vsel"><span class="ddlab">View</span>
-        <select id="viewSel" aria-label="Diagram view"><option value="spacing">Spacing diagram</option><option value="planting">Planting diagram</option></select>
-      </label>
+      <div class="vsel"><span class="ddlab" id="viewLab">View</span>
+        <div class="seg" id="viewSeg" role="radiogroup" aria-labelledby="viewLab">
+          <button type="button" role="radio" data-view="spacing">Spacing diagram</button><button type="button" role="radio" data-view="planting">Planting diagram</button>
+        </div>
+      </div>
     </div>
     <div class="stage-head">
       <div class="size"><span class="szlab">Block plan size</span>
@@ -564,7 +580,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   migratePatterns();
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} record(); }
   // ---- undo / redo ----
-  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','cell','major','scale','commonNames','compass','north','opacity','autoOrder'];
+  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','layerOrder','cell','major','scale','commonNames','compass','north','opacity','autoOrder'];
   function planSnap(){ var o = {}; HKEYS.forEach(function(k){ o[k] = state[k]; }); return JSON.stringify(o); }
   function updUndo(){ var u = $('undo'), r = $('redo'); if(u) u.disabled = hIdx <= 0; if(r) r.disabled = hIdx >= hist.length - 1; }
   function record(){
@@ -731,21 +747,116 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var all = [];
     state.tpls.forEach(function(t,i){ all.push({t:t, idx:i}); });
     if(!all.length){ box.innerHTML = '<p class="sub">No plants yet. Start with Add custom circle, or pick plants from Presets.</p>'; return; }
-    LAYERS.forEach(function(l){
+    menuLayers().forEach(function(l){
       var grp = all.filter(function(a){ return a.t.layer === l[0]; });
       if(!grp.length) return;
-      var h = document.createElement('div'); h.className = 'mh'; h.textContent = l[1]; box.appendChild(h);
+      var g = document.createElement('div'); g.className = 'mgrp'; g.dataset.layer = l[0]; box.appendChild(g);
+      var h = document.createElement('div'); h.className = 'mh'; h.textContent = l[1]; h.tabIndex = 0;
+      h.title = 'Drag to reorder categories'; h.setAttribute('aria-label', l[1] + '. Drag, or press Alt and an arrow key, to move this category');
+      g.appendChild(h);
+      dragSort(h, g, function(){ return [].slice.call(box.querySelectorAll('.mgrp')); }, commitLayerOrder);
+      h.onkeydown = function(e){ keyMove(e, g, '.mgrp', commitLayerOrder, '.mh'); };
       grp.forEach(function(a){
-        var t = a.t, r = document.createElement('div'); r.className = 'prow';
+        var t = a.t, r = document.createElement('div'); r.className = 'prow'; if(!t.id) t.id = uid(); r.dataset.id = t.id;
         var b = document.createElement('button'); b.className = 'plant';
         b.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="'+fillFor(t)+'" stroke="rgba(0,0,0,.4)"/></svg><span></span><small>'+t.d+' ft</small>';
         appendSci(b.children[1], (t.menu || t.label).replace(/\n/g,' '), t.ital);
-        b.onclick = function(){ addItem(t); };
+        b.onclick = function(){ if(Date.now() - dragEnded < 250) return; addItem(t); };
+        b.title = 'Click to add. Drag to reorder.';
+        dragSort(b, r, function(){ return [].slice.call(g.querySelectorAll('.prow')); }, function(){ commitPlantOrder(g); });
+        b.onkeydown = function(e){ keyMove(e, r, '.prow', function(){ commitPlantOrder(g); }, '.plant'); };
         var x = document.createElement('button'); x.className = 'x'; x.textContent = '×';
         x.setAttribute('aria-label','Remove '+(t.menu||t.label).replace(/\n/g,' ')+' from menu');
         x.onclick = function(){ state.tpls.splice(a.idx,1); renderMenu(); save(); renderEditor(); };
-        r.appendChild(b); r.appendChild(x); box.appendChild(r);
+        r.appendChild(b); r.appendChild(x); g.appendChild(r);
       });
+    });
+  }
+  // ---- reordering the Add a plant menu: drag plants within a category, and drag categories ----
+  // category order for the menu (built-in layers, then custom, unless the user has moved them)
+  function menuLayers(){
+    var ord = state.layerOrder || [];
+    return LAYERS.slice().sort(function(a, b){
+      var ia = ord.indexOf(a[0]), ib = ord.indexOf(b[0]);
+      if(ia < 0) ia = 1000 + LAYERS.indexOf(a); if(ib < 0) ib = 1000 + LAYERS.indexOf(b);
+      return ia - ib;
+    });
+  }
+  function commitLayerOrder(){
+    var shown = [].slice.call($('plants').querySelectorAll('.mgrp')).map(function(g){ return g.dataset.layer; });
+    var full = menuLayers().map(function(l){ return l[0]; }), k = 0;
+    // shown categories take the slots they already used, in their new order
+    state.layerOrder = full.map(function(key){ return shown.indexOf(key) >= 0 ? shown[k++] : key; });
+    renderMenu(); save();
+  }
+  function commitPlantOrder(g){
+    var ids = [].slice.call(g.querySelectorAll('.prow')).map(function(r){ return r.dataset.id; });
+    var lay = g.dataset.layer, k = 0;
+    var byId = {}; state.tpls.forEach(function(t){ byId[t.id] = t; });
+    state.tpls = state.tpls.map(function(t){ return t.layer === lay && byId[ids[k]] ? byId[ids[k++]] : t; });
+    renderMenu(); save();
+  }
+  // Alt + arrow keys move the focused plant or category
+  function keyMove(e, node, sel, commit, focusSel){
+    if(!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault(); e.stopPropagation();
+    var sib = e.key === 'ArrowUp' ? node.previousElementSibling : node.nextElementSibling;
+    while(sib && !sib.matches(sel)) sib = e.key === 'ArrowUp' ? sib.previousElementSibling : sib.nextElementSibling;
+    if(!sib) return;
+    node.parentNode.insertBefore(node, e.key === 'ArrowUp' ? sib : sib.nextSibling);
+    var id = node.dataset.id, layer = node.dataset.layer;
+    commit();
+    var again = id ? $('plants').querySelector('.prow[data-id="' + id + '"] ' + focusSel) : $('plants').querySelector('.mgrp[data-layer="' + layer + '"] ' + focusSel);
+    if(again) again.focus();
+  }
+  var dragEnded = 0;
+  // press and drag `handle` to move `node` among the nodes listed by `peers`; touch needs a short hold first
+  function dragSort(handle, node, peers, commit){
+    handle.addEventListener('pointerdown', function(e){
+      if(e.button !== 0) return;
+      e.stopPropagation();
+      var box = $('plants'), sx = e.clientX, sy = e.clientY, on = false, held = e.pointerType !== 'touch', timer = null, lastY = sy, raf = null;
+      if(!held) timer = setTimeout(function(){ held = true; begin(); }, 280);
+      function begin(){
+        on = true; node.classList.add('dragging'); box.classList.add('sorting');
+        try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+      }
+      function place(y){
+        var list = peers(), from = list.indexOf(node);
+        for(var i = 0; i < list.length; i++){
+          if(list[i] === node) continue;
+          var rc = list[i].getBoundingClientRect(), mid = rc.top + rc.height / 2;
+          if(i < from && y < mid){ node.parentNode.insertBefore(node, list[i]); return; }
+          if(i > from && y > mid){ node.parentNode.insertBefore(node, list[i].nextSibling); }
+        }
+      }
+      function scroll(){
+        raf = null; if(!on) return;
+        var rc = box.getBoundingClientRect(), v = 0;
+        if(lastY < rc.top + 28) v = -8; else if(lastY > rc.bottom - 28) v = 8;
+        if(v){ box.scrollTop += v; place(lastY); raf = requestAnimationFrame(scroll); }
+      }
+      function move(ev){
+        lastY = ev.clientY;
+        if(!on){
+          var far = Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 6;
+          if(!held){ if(far) end(); return; }
+          if(!far) return;
+          begin();
+        }
+        ev.preventDefault(); place(ev.clientY);
+        if(!raf) raf = requestAnimationFrame(scroll);
+      }
+      function touchBlock(ev){ if(on) ev.preventDefault(); }
+      function end(){
+        clearTimeout(timer);
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', end);
+        document.removeEventListener('touchmove', touchBlock);
+        if(on){ on = false; node.classList.remove('dragging'); box.classList.remove('sorting'); dragEnded = Date.now(); commit(); }
+      }
+      function up(){ end(); }
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', end);
+      document.addEventListener('touchmove', touchBlock, {passive:false});
     });
   }
 
@@ -843,8 +954,19 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     });
     return state.icons;
   }
-  function renderViews(){ $('viewSel').value = state.view; }
-  $('viewSel').onchange = function(){ state.view = this.value; render(); };
+  var segBtns = [].slice.call($('viewSeg').querySelectorAll('button'));
+  function renderViews(){
+    segBtns.forEach(function(b){ var on = b.dataset.view === state.view; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+  }
+  function setView(v){ if(state.view === v) return; state.view = v; render(); }
+  segBtns.forEach(function(b, k){
+    b.onclick = function(){ setView(b.dataset.view); };
+    b.onkeydown = function(e){
+      if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key) < 0) return;
+      e.preventDefault(); e.stopPropagation();
+      var o = segBtns[1 - k]; setView(o.dataset.view); o.focus();
+    };
+  });
   // Split the layers (kept in order) between two columns so the key is as short as possible.
   // A split whose right column is taller costs three extra rows, so the left column is the taller one
   // unless that would make the key noticeably taller.
@@ -1109,9 +1231,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var shown = 0;
     function matches(e){ return !q || (e.name + ' ' + (e.label || (e.tpl && e.tpl.label) || '')).toLowerCase().indexOf(q) >= 0; }
     function group(title, entries, extra, show, rows){
+      // remember every entry, not only the ones the search shows, so picks made under earlier searches still count
+      entries.forEach(function(e){ ENTRY[e.key] = e; });
       var vis = entries.filter(matches);
       if(!vis.length) return false;
-      vis.forEach(function(e){ ENTRY[e.key] = e; });
       if(!show) return true;
       var gid = title + '|' + vis[0].key.charAt(0);
       var h = document.createElement('div'); h.className = 'prh';
@@ -1513,8 +1636,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
   });
   // ---- after loading a layout, offer to add its plants that are missing from the menu ----
+  // wrap a layout name in quotes unless it already has them
+  function qn(t){ return /[“”"]/.test(t) ? t : '“' + t + '”'; }
   function plantName(o){ return String(o.menu || o.label || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
-  function offerLayoutPlants(layoutName){
+  function offerLayoutPlants(layoutName, srcTpls){
     var missing = [], seen = {};
     state.items.forEach(function(it){
       // already linked to a menu plant
@@ -1526,32 +1651,44 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       if(seen[key]){ seen[key].push(it); return; }
       seen[key] = [it]; missing.push(key);
     });
+    if(srcTpls){
+      var pos = function(key){ var k = srcTpls.findIndex(function(t){ return t.id === key; }); return k < 0 ? 1e9 : k; };
+      missing.sort(function(a, b){ return pos(a) - pos(b); });
+    }
     save();
     if(!missing.length) return;
     var n = missing.length, label = n === 1 ? '1 plant' : n + ' plants';
-    ask('Add plants to your menu?', 'Append ' + label + ' from “' + layoutName + '” to your Add a plant menu? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
+    ask('Add plants to your menu?', 'Append ' + label + ' from ' + qn(layoutName) + ' to your Add a plant menu? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
       missing.forEach(function(key){
         var group = seen[key], first = group[0];
-        var t = {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null, ital:first.ital || null};
+        var given = (srcTpls || []).filter(function(t){ return t.id === first.src; })[0];
+        var t = given ? JSON.parse(JSON.stringify(given)) : {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null, ital:first.ital || null};
         if(!LAYERS.some(function(l){ return l[0] === t.layer; })) t.layer = 'herb';
         group.forEach(function(it){ it.src = t.id; });
         state.tpls.push(t);
       });
       render();
-      $('csvMsg').textContent = 'Added ' + label + ' from “' + layoutName + '” to your menu.';
+      $('csvMsg').textContent = 'Added ' + label + ' from ' + qn(layoutName) + ' to your menu.';
     });
   }
   // ---- saved layouts ----
+  // built-in layouts from the Native Plant Salvage Foundation: always listed, can't be deleted
+  var BUILTIN_LAYOUTS = [{"name":"“Top Picks” for close to home","w":20,"h":15,"vis":{"trees":true,"large":true,"small":true,"herb":true},"items":[{"id":94,"label":"PIN\nCON","d":10,"color":"#332288","pattern":"solid","layer":"trees","fs":22,"menu":"Pinus contorta var. contorta (Shore Pine)","src":"tmw9jomk14fnv","x":17.737,"y":1.37},{"id":95,"label":"PIN\nCON","d":10,"color":"#332288","pattern":"solid","layer":"trees","fs":22,"menu":"Pinus contorta var. contorta (Shore Pine)","src":"tmw9jomk14fnv","x":3.404,"y":3.523},{"id":96,"label":"CAL\nDEC","d":10,"color":"#44AA99","pattern":"solid","layer":"trees","fs":22,"menu":"Calocedrus decurrens (Incense Cedar)","src":"tmw9jomk1xmjs","x":11.622,"y":9.413},{"id":97,"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","src":"tmw9jomk1qksn","x":5.688,"y":10.098},{"id":98,"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","src":"tmw9jomk1qksn","x":0.321,"y":1.707},{"id":99,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":8.002,"y":0.479},{"id":100,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":16.923,"y":14.178},{"id":101,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":14.606,"y":13.241},{"id":102,"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","src":"tmw9jomk1e34i","x":0.424,"y":12.23},{"id":103,"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","src":"tmw9jomk1e34i","x":15.534,"y":6.662},{"id":104,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":12.177,"y":1.064},{"id":105,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":19.031,"y":9.134},{"id":106,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":17.07,"y":10.984},{"id":107,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":4.486,"y":13.844},{"id":108,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":0.255,"y":8.161},{"id":109,"label":"PYR\nCOC","d":7,"color":"#DDCC77","pattern":"solid","layer":"large","fs":22,"menu":"Pyracantha coccinea (Scarlet Firethorn)","src":"tmw9jp8szcumn","x":10.744,"y":4.135},{"id":110,"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","src":"tmw9jp8sz0a16","x":8.597,"y":14.111},{"id":111,"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","src":"tmw9jp8sz0a16","x":19.641,"y":4.352},{"id":112,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":3.866,"y":0.171},{"id":113,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":3.358,"y":6.664},{"id":114,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":19.601,"y":14.667},{"id":115,"label":"RIB\nSAN","d":5,"color":"#AA4499","pattern":"solid","layer":"large","fs":22,"menu":"Ribes sanguineum (Red-flowering Currant)","src":"tmw9jp8szinlh","x":19.878,"y":7.564},{"id":116,"label":"RIB\nSAN","d":5,"color":"#AA4499","pattern":"solid","layer":"large","fs":22,"menu":"Ribes sanguineum (Red-flowering Currant)","src":"tmw9jp8szinlh","x":12.189,"y":15},{"id":117,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":9.93,"y":0},{"id":118,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":13.765,"y":0.136},{"id":119,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.233,"y":0.911},{"id":120,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.706,"y":0},{"id":121,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":17.213,"y":0.482},{"id":122,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":19.057,"y":0},{"id":123,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":19.469,"y":1.813},{"id":124,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":14.138,"y":9.908},{"id":125,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":9.968,"y":11.621},{"id":126,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":8.749,"y":10.737},{"id":127,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":2.734,"y":10.219},{"id":128,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":0,"y":5.747},{"id":129,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.073,"y":15},{"id":130,"label":"RUB\nPAR","d":3,"color":"#88CCEE","pattern":"vert","layer":"small","fs":22,"menu":"Rubus parviflorus (Thimbleberry)","src":"tmw9jp8sz9wwv","x":20,"y":12.125},{"id":131,"label":"RUB\nPAR","d":3,"color":"#88CCEE","pattern":"vert","layer":"small","fs":22,"menu":"Rubus parviflorus (Thimbleberry)","src":"tmw9jp8sz9wwv","x":1.178,"y":14.273}],"tpls":[{"id":"tmw9jomk1xmjs","label":"CAL\nDEC","menu":"Calocedrus decurrens (Incense Cedar)","d":10,"layer":"trees","color":"#44AA99","pattern":"solid"},{"id":"tmw9jomk14fnv","label":"PIN\nCON","menu":"Pinus contorta var. contorta (Shore Pine)","d":10,"layer":"trees","color":"#332288","pattern":"solid"},{"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","id":"tmw9jomk1qksn"},{"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","id":"tmw9jomk1grlj"},{"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","id":"tmw9jomk1e34i"},{"label":"PYR\nCOC","d":7,"color":"#DDCC77","pattern":"solid","layer":"large","fs":22,"menu":"Pyracantha coccinea (Scarlet Firethorn)","id":"tmw9jp8szcumn"},{"id":"tmw9jp8szno5k","label":"PHI\nLEW","menu":"Philadelphus lewisii (Mock-orange)","d":5,"layer":"large","color":"#CC6677","pattern":"solid"},{"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","id":"tmw9jp8sz0a16"},{"id":"tmw9jp8szinlh","label":"RIB\nSAN","menu":"Ribes sanguineum (Red-flowering Currant)","d":5,"layer":"large","color":"#AA4499","pattern":"solid"},{"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","id":"tmw9jp8sz854v"},{"id":"tmw9jp8sz9wwv","label":"RUB\nPAR","menu":"Rubus parviflorus (Thimbleberry)","d":3,"layer":"small","color":"#88CCEE","pattern":"vert"},{"id":"tmw9jp8sz0re4","label":"SYM\nALB","menu":"Symphoricarpos albus (Snowberry)","d":3,"layer":"small","color":"#44AA99","pattern":"vert"}],"cell":1,"major":5,"commonNames":false,"compass":true,"north":41,"opacity":0.87,"autoOrder":true,"view":"spacing"}];
   function renderLayouts(){
     var b = $('layouts'); b.innerHTML = '';
     var L = state.layouts || [];
-    if(!L.length){ b.innerHTML = '<p class="sub explain">Name and save the current block plan to reuse it later.</p>'; return; }
-    L.forEach(function(lay, i){
+    var bh = document.createElement('p'); bh.className = 'layh'; bh.textContent = 'From the Native Plant Salvage Foundation'; b.appendChild(bh);
+    BUILTIN_LAYOUTS.forEach(function(lay){ b.appendChild(layRow(lay, -1)); });
+    var uh = document.createElement('p'); uh.className = 'layh'; uh.textContent = 'Your layouts'; b.appendChild(uh);
+    if(!L.length){ var e = document.createElement('p'); e.className = 'sub explain'; e.style.margin = '0'; e.textContent = 'Name and save the current block plan to reuse it later.'; b.appendChild(e); return; }
+    L.forEach(function(lay, i){ b.appendChild(layRow(lay, i)); });
+  }
+  function layRow(lay, i){
       var r = document.createElement('div'); r.className = 'lay';
-      var n = document.createElement('span'); n.textContent = lay.name + ' (' + lay.items.length + ')';
+      var n = document.createElement('span'); n.textContent = lay.name;
       var ld = document.createElement('button'); ld.className = 'btn ibtn'; var fsvg = document.querySelector('svg.folder-tpl').cloneNode(true); fsvg.removeAttribute('hidden'); fsvg.classList.remove('folder-tpl'); ld.appendChild(fsvg); ld.appendChild(document.createTextNode('Load'));
       ld.onclick = function(){
-        if(state.items.length) ask('Replace current block plan?', 'Replace the current block plan with “'+lay.name+'”?', 'Replace', doLoad); else doLoad();
+        if(state.items.length) ask('Replace current block plan?', 'Replace the current block plan with '+qn(lay.name)+'?', 'Replace', doLoad); else doLoad();
       };
       function doLoad(){
         var c = JSON.parse(JSON.stringify(lay));
@@ -1559,12 +1696,15 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
         state.nextId = Math.max(state.nextId, state.items.reduce(function(m,x){ return Math.max(m,x.id); },0)+1);
         render();
-        offerLayoutPlants(lay.name);
+        offerLayoutPlants(lay.name, c.tpls);
       };
-      var x = document.createElement('button'); x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label','Delete layout '+lay.name);
-      x.onclick = function(){ state.layouts.splice(i,1); save(); renderLayouts(); };
-      r.appendChild(n); r.appendChild(ld); r.appendChild(x); b.appendChild(r);
-    });
+      r.appendChild(n); r.appendChild(ld);
+      if(i >= 0){
+        var x = document.createElement('button'); x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label','Delete layout '+lay.name);
+        x.onclick = function(){ state.layouts.splice(i,1); save(); renderLayouts(); };
+        r.appendChild(x);
+      }
+      return r;
   }
   $('saveLayout').onclick = function(){
     var name = $('tplName').value.trim();

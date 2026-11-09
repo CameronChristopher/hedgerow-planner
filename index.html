@@ -495,8 +495,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   </div>
   <div class="tabs" role="tablist" aria-label="About sections">
     <button class="tab" role="tab" id="infoTabDonate" data-info="donate" aria-selected="true" aria-controls="infoDonate">Donate</button>
-    <button class="tab" role="tab" id="infoTabFb" data-info="fb" aria-selected="false" aria-controls="infoFb">Feedback</button>
     <button class="tab" role="tab" id="infoTabLog" data-info="log" aria-selected="false" aria-controls="infoLog">Changelog</button>
+    <button class="tab" role="tab" id="infoTabFb" data-info="fb" aria-selected="false" aria-controls="infoFb">Feedback</button>
   </div>
   <div class="db" id="infoDonate" role="tabpanel" aria-labelledby="infoTabDonate" style="padding-top:14px">
     <p>The Native Plant Salvage Project was started in 1994 to involve Thurston County residents in direct action to protect water resources and improve habitat. Our mission is to provide hands-on education to protect and conserve water resources and habitat from the South Sound prairies to the shores of the Salish Sea.</p>
@@ -505,6 +505,15 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   </div>
   <div class="db" id="infoLog" role="tabpanel" aria-labelledby="infoTabLog" style="padding-top:6px" hidden>
     <p class="sub explain" style="margin-top:8px">What’s new and what’s changed in the planner, newest first.</p>
+    <section class="logu">
+      <h3>November 9, 2026 update</h3>
+      <ul>
+        <li>You can now drag plants to reorder them within a category in the Add a plant menu, and drag category headings to reorder the categories.</li>
+        <li>Saved layouts now include “Top Picks” for close to home, a ready-made layout from the Native Plant Salvage Foundation you can load and adapt.</li>
+        <li>Fixed: in Presets, plants you checked while searching for one name were dropped when you searched for another. Now every plant you check is added.</li>
+        <li>The View dropdown is now a toggle, so you can switch between the spacing and planting diagrams with one click.</li>
+      </ul>
+    </section>
     <section class="logu">
       <h3>November 7, 2026 update</h3>
       <ul>
@@ -558,7 +567,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     ['Indigo','#332288'],['Cyan','#88CCEE'],['Teal','#44AA99'],['Green','#117733'],['Olive','#999933'],
     ['Sand','#DDCC77'],['Rose','#CC6677'],['Wine','#882255'],['Purple','#AA4499']
   ];
-  var PATTERNS = [['solid','Solid'],['vert','Vertical'],['dots','Dots'],['grid','Grid'],['horiz','Horizontal'],['holes','Holes']];
+  var PATTERNS = [['solid','Solid'],['holes','Holes'],['vert','Vertical'],['dots','Dots'],['grid','Grid'],['horiz','Horizontal']];
   var LAYERS = [['trees','Trees'],['large','Large shrubs'],['small','Small shrubs'],['herb','Herbaceous']], BASE_LAYERS = LAYERS.length;
   var EXAMPLE = {label:'Tomato', d:2, color:'#CC6677', pattern:'solid', layer:'herb'};
   var KEY = 'garden-plan-v2';

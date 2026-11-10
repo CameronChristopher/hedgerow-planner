@@ -24,7 +24,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.4}
-.app{display:grid;grid-template-columns:var(--side,320px) 16px minmax(0,1fr);gap:0;padding:16px;max-width:1400px;margin:0 auto}
+.app{display:grid;grid-template-columns:var(--side,clamp(320px,30vw,400px)) 16px minmax(0,1fr);gap:0;padding:16px;max-width:1400px;margin:0 auto}
 @media (max-width:820px){.app{grid-template-columns:1fr;gap:16px}.split{display:none}}
 aside{display:flex;flex-direction:column;gap:14px}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -1126,7 +1126,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!cols[1].childNodes.length) cols[1].remove();
   }
 
-  var appEl = document.querySelector('.app'), split = $('split'), SIDE_DEFAULT = 320;
+  var appEl = document.querySelector('.app'), split = $('split'), SIDE_DEFAULT = 400;
   function sideNow(){ return Math.round(document.querySelector('aside').getBoundingClientRect().width); }
   function setSide(px, persist){
     var max = Math.max(240, Math.min(620, appEl.clientWidth - 32 - 16 - 380));

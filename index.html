@@ -1481,7 +1481,15 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     });
     return {x:x0, y:y0, w:x1 - x0, h:y1 - y0};
   }
-  function pxPerUnit(){ return (vp.clientWidth || 800) / (state.w*S + 160) * (state.zoom || 100) / 100; }
+  // 100% fits the whole block plan in the viewport: its width, and its height up to the viewport's 72vh limit
+  function pxPerUnit(){
+    // leave room for the largest circle hanging over an edge, so nothing needs scrolling
+    var pad = 80;
+    state.items.forEach(function(it){ pad = Math.max(pad, it.d*S/2 + 6); });
+    var byW = (vp.clientWidth || 800) / (state.w*S + 2*pad);
+    var byH = (window.innerHeight * 0.72 - 4) / (state.h*S + 2*pad);
+    return Math.min(byW, byH) * (state.zoom || 100) / 100;
+  }
   function sizeSvg(prevB){
     if(!lastB) return;
     var k = pxPerUnit(), w = Math.round(lastB.w * k);
@@ -1512,7 +1520,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     setZoom((state.zoom || 100) * (e.deltaY < 0 ? 1.12 : 1 / 1.12));
   }, {passive:false});
   if(window.ResizeObserver) new ResizeObserver(function(){ sizeSvg(null); }).observe(vp);
-  else window.addEventListener('resize', function(){ sizeSvg(null); });
+  window.addEventListener('resize', function(){ sizeSvg(null); });
   zoomUi();
 
   // ---- plant menu: cut the last visible row in half and show a hint when more is below ----

@@ -120,7 +120,12 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .logu{padding:14px 0 6px;border-top:1px solid var(--line);margin-top:12px}
 .logu:first-of-type{border-top:0;margin-top:0}
 .logu h3{font-size:16.5px;margin:0 0 8px}
-.logu ul{margin:0;padding-left:20px}
+.logu ul{margin:0;padding:0;list-style:none}
+.logu li{display:flex;gap:10px;align-items:baseline;margin:0 0 8px}
+.ltag{flex:none;width:72px;text-align:center;font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:999px;padding:2px 0;position:relative;top:-1px}
+.ltag.fixed{background:#fde4cc;color:#8a3f0a}
+.ltag.feature{background:#d6eff5;color:#11586b}
+.ltag.note{background:#dcefe2;color:#1a5c33}
 #infoDlg .db .sub{font-size:14px}
 #about .tab,#infoDlg .tab{font-size:15px}
 .db ul{margin:6px 0;padding-left:20px}
@@ -580,21 +585,21 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     <section class="logu">
       <h3>November 9, 2026 update</h3>
       <ul>
-        <li>Tips &amp; Templates has a new “How to use this planner” guide, with step-by-step instructions and screenshots.</li>
-        <li>You can now drag plants to reorder them within a category in the Add a plant menu, and drag category headings to reorder the categories.</li>
-        <li>Saved layouts now include “Top Picks” for close to home, a ready-made layout from the Native Plant Salvage Foundation you can load and adapt.</li>
-        <li>Fixed: in Presets, plants you checked while searching for one name were dropped when you searched for another. Now every plant you check is added.</li>
-        <li>The View dropdown is now a toggle, so you can switch between the spacing and planting diagrams with one click.</li>
+        <li><span class="ltag feature">feature</span><span>Tips &amp; Templates has a new “How to use this planner” guide, with step-by-step instructions and screenshots.</span></li>
+        <li><span class="ltag feature">feature</span><span>You can now drag plants to reorder them within a category in the Add a plant menu, and drag category headings to reorder the categories.</span></li>
+        <li><span class="ltag feature">feature</span><span>Saved layouts now include “Top Picks” for close to home, a ready-made layout from the Native Plant Salvage Foundation you can load and adapt.</span></li>
+        <li><span class="ltag fixed">fixed</span><span>In Presets, plants you checked while searching for one name were dropped when you searched for another. Now every plant you check is added.</span></li>
+        <li><span class="ltag feature">feature</span><span>The View dropdown is now a toggle, so you can switch between the spacing and planting diagrams with one click.</span></li>
       </ul>
     </section>
     <section class="logu">
       <h3>November 7, 2026 update</h3>
       <ul>
-        <li>Fixed: pressing Delete sometimes didn’t remove the selected circle after you’d been editing a label or ticking a setting.</li>
-        <li>In the spacing diagram, the key now shows how many of each plant are on the block plan inside its color swatch, and the swatches use a finer pattern so dots and stripes are easy to see. The planting diagram key still shows the count after the name.</li>
-        <li>More options has a new Display options group with a “Show common names in key” switch. It’s off to start, so the key lists plants by scientific name; turn it on to include common names.</li>
-        <li>Presets now has a “By plant characteristic” section under the Native Plant Salvage Foundation, with lists such as Pollinator-attracting, Larval hosts and Soil-binding, so you can pick plants by what they do in a hedgerow.</li>
-        <li>Loading a saved layout now offers to add any of its plants that aren’t in your Add a plant menu, so you can place more of them and update them later.</li>
+        <li><span class="ltag fixed">fixed</span><span>Pressing Delete sometimes didn’t remove the selected circle after you’d been editing a label or ticking a setting.</span></li>
+        <li><span class="ltag feature">feature</span><span>In the spacing diagram, the key now shows how many of each plant are on the block plan inside its color swatch, and the swatches use a finer pattern so dots and stripes are easy to see. The planting diagram key still shows the count after the name.</span></li>
+        <li><span class="ltag feature">feature</span><span>More options has a new Display options group with a “Show common names in key” switch. It’s off to start, so the key lists plants by scientific name; turn it on to include common names.</span></li>
+        <li><span class="ltag feature">feature</span><span>Presets now has a “By plant characteristic” section under the Native Plant Salvage Foundation, with lists such as Pollinator-attracting, Larval hosts and Soil-binding, so you can pick plants by what they do in a hedgerow.</span></li>
+        <li><span class="ltag feature">feature</span><span>Loading a saved layout now offers to add any of its plants that aren’t in your Add a plant menu, so you can place more of them and update them later.</span></li>
       </ul>
     </section>
   </div>

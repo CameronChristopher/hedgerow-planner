@@ -130,6 +130,13 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .ltag.note{background:#dcefe2;color:#1a5c33}
 #infoDlg .db .sub{font-size:14px}
 #about .tab,#infoDlg .tab{font-size:15px}
+#about .db,#infoDlg .db{padding:14px 32px 32px}
+/* text sits in a centered column of comfortable line length; pictures and galleries use the full width */
+#about .db > :not(img):not(.gtable),#infoDlg .db > :not(img){max-width:600px;margin-left:auto;margin-right:auto}
+#about .gal{padding-left:0;margin-top:16px}
+#about .db p,#about .db li,#infoDlg .db p,#infoDlg .db li{max-width:none}
+#about .dh,#infoDlg .dh{padding:20px 32px}
+#about .tabs,#infoDlg .tabs{padding:0 32px}
 .db ul{margin:6px 0;padding-left:20px}
 .months{display:grid;grid-template-columns:repeat(12,1fr);gap:2px;max-width:420px;font-size:11px;color:var(--muted);text-align:center}
 .months .t{height:14px;background:var(--line);border-radius:2px}
@@ -161,6 +168,11 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .tab{font:inherit;font-size:14px;padding:10px 12px;border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);cursor:pointer;text-decoration:none}
 .tab:hover{color:var(--ink)}
 .tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.tab.tablink{margin-left:auto;display:inline-flex;align-items:center;gap:5px;color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.tab.tablink:hover{text-decoration-thickness:2px}
+#about .tabs{gap:0}
+#about .tab{padding:10px 11px}
+#about .tab.tablink{font-size:14px;padding-right:0}
 .tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .dl{list-style:none;padding:0;margin:6px 0 14px}
 .dl li{border-bottom:1px solid var(--line)}
@@ -424,7 +436,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
     <button class="tab" role="tab" id="tabBtnGuide" data-tab="guide" aria-selected="true" aria-controls="panelGuide">How to use this planner</button>
     <button class="tab" role="tab" id="tabBtnSpace" data-tab="space" aria-selected="false" aria-controls="panelSpace">How to space plants</button>
     <button class="tab" role="tab" id="tabBtnDl" data-tab="dl" aria-selected="false" aria-controls="panelDl">Template downloads</button>
-    <a class="tab" href="https://hedgerows.extension.wsu.edu/" target="_blank" rel="noopener noreferrer" aria-label="WSU Hedgerow Site (opens in a new tab)">WSU Hedgerow Site</a>
+    <a class="tab tablink" href="https://hedgerows.extension.wsu.edu/" target="_blank" rel="noopener noreferrer" aria-label="WSU Hedgerow Site (opens in a new tab)">WSU Hedgerow Site<svg class="ico" aria-hidden="true" focusable="false" width="13" height="13" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
   </div>
   <div class="db guide" id="panelGuide" role="tabpanel" aria-labelledby="tabBtnGuide">
     <p>The Hedgerow Planner helps you turn a plant list into a to-scale hedgerow plan in just a few steps: create a grid, add plants, arrange them as spacing circles, then save or export (with additional view options). It runs in any web browser, needs no account, and saves your work in that browser as you go.</p>
@@ -1101,8 +1113,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function countMark(color, n, x, y, font, pattern){
     var ink = pattern === 'holes' ? '#000000' : inkFor(color), halo = ink === '#000000' ? '#ffffff' : '#000000';
     var g = el('g', {});
-    var t = el('text', {x:x, y:y, 'text-anchor':'middle', 'dominant-baseline':'central', 'font-size': n >= 100 ? 10 : (n >= 10 ? 12 : 13), 'font-weight':700,
-      fill:ink, stroke:halo, 'stroke-opacity':0.65, 'stroke-width':1.4, 'paint-order':'stroke', 'stroke-linejoin':'round'});
+    var t = el('text', {x:x, y:y, 'text-anchor':'middle', 'dominant-baseline':'central', 'font-size': n >= 100 ? 12 : (n >= 10 ? 14 : 15), 'font-weight':700,
+      fill:ink, stroke:halo, 'stroke-opacity': halo === '#ffffff' ? 0.9 : 0.65, 'stroke-width': halo === '#ffffff' ? 2.4 : 1.4, 'paint-order':'stroke', 'stroke-linejoin':'round'});
     if(font && font !== 'inherit') t.setAttribute('font-family', font);
     t.textContent = n; g.appendChild(t); return g;
   }
@@ -1136,9 +1148,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var ul = document.createElement('div'); ul.className = 'kl';
       grp.forEach(function(e){
         var row = document.createElement('div'); row.className = 'ki';
-        var sv = el('svg',{width:28, height:28, viewBox:'-14 -14 28 28', 'aria-hidden':'true'});
+        var sv = el('svg',{width:34, height:34, viewBox:'-17 -17 34 34', 'aria-hidden':'true'});
         if(state.view === 'planting') iconParts(icons[plantKey(e.it)], e.it.color, 0, 0, 9).forEach(function(n){ sv.appendChild(n); });
-        else { sv.appendChild(el('circle',{r:13, fill:keyFill(e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); sv.appendChild(countMark(e.it.color, e.n, 0, 0, 'inherit', e.it.pattern)); }
+        else { sv.appendChild(el('circle',{r:16, fill:keyFill(e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); sv.appendChild(countMark(e.it.color, e.n, 0, 0, 'inherit', e.it.pattern)); }
         var name = document.createElement('span'); appendSci(name, keyName(e.it), e.it.ital, fullName(e.it));
         if(e.n > 1 && state.view === 'planting'){ var c = document.createElement('small'); c.textContent = ' ×' + e.n; name.appendChild(c); }
         row.appendChild(sv); row.appendChild(name); ul.appendChild(row);
@@ -1956,7 +1968,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var listTop = y;
       G.rows.forEach(function(r){
         if(state.view === 'planting') iconParts(icons[plantKey(r.e.it)], r.e.it.color, cx + 27, y + 13, 9).forEach(function(n){ g.appendChild(n); });
-        else { g.appendChild(el('circle',{cx:cx + 27, cy:y + 13, r:13, fill:keyFill(r.e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); g.appendChild(countMark(r.e.it.color, r.e.n, cx + 27, y + 13, FF, r.e.it.pattern)); }
+        else { g.appendChild(el('circle',{cx:cx + 27, cy:y + 13, r:15, fill:keyFill(r.e.it), stroke:'rgba(0,0,0,.5)', 'stroke-width':1.2})); g.appendChild(countMark(r.e.it.color, r.e.n, cx + 27, y + 13, FF, r.e.it.pattern)); }
         var t = el('text',{'font-family':FF, 'font-size':13, fill:'#222222'});
         r.ls.forEach(function(ln, j){
           var ts = el('tspan',{x:cx + 48, y:y + 17 + j*15});

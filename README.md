@@ -26,7 +26,7 @@ The whole app is a single file, `index.html`. Open it in a browser, or host it a
 
 Spacing guidance, diagrams and planting template previews are from the [Hedgerow Planting Templates](https://hedgerows.extension.wsu.edu/hedgerow-planting-template/) by NPSF and Washington State University Extension.
 
-Icons from [dooicons](https://dooicons.vercel.app). Typeface: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque).
+Icons from [dooicons](https://dooicons.vercel.app). Typeface: [Open Sans](https://fonts.google.com/specimen/Open+Sans).
 
 ## Feedback
 

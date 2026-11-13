@@ -613,6 +613,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   <div class="db" id="infoLog" role="tabpanel" aria-labelledby="infoTabLog" style="padding-top:6px" hidden>
     <p class="sub explain" style="margin-top:8px">What’s new and what’s changed in the planner, newest first.</p>
     <section class="logu">
+      <h3>November 13, 2026 update</h3>
+      <ul>
+        <li><span class="ltag feature">feature</span><span>Circles on a layer you've unchecked are locked, so you can arrange other plants around them without moving them by accident.</span></li>
+      </ul>
+    </section>
+    <section class="logu">
       <h3>November 12, 2026 update</h3>
       <ul>
         <li><span class="ltag feature">feature</span><span>A cleaner, more accessible layout: Open Sans typeface, neutral grays, clearer field borders and grid, a consistent keyboard focus outline, a centered plan with zoom controls beneath it, scale bars that stay clear of the circles, and messages that fade away.</span></li>
@@ -802,7 +808,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var lab = document.createElement('label');
       var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.vis[l[0]] !== false;
       if(cb.checked) shown++;
-      cb.onchange = function(){ state.vis[l[0]] = cb.checked; render(); };
+      cb.onchange = function(){ state.vis[l[0]] = cb.checked; var c = cur(); if(!cb.checked && c && c.layer === l[0]) state.sel = null; render(); };
       var nm = document.createElement('span'); nm.textContent = l[1];
       lab.appendChild(cb); lab.appendChild(nm); row.appendChild(lab);
       if(i >= BASE_LAYERS){
@@ -1624,9 +1630,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       svg.appendChild(t);
     }
     state.items.slice().sort(function(a,b){ return state.autoOrder ? ((b.d - a.d) || (order(a.layer) - order(b.layer))) : order(a.layer) - order(b.layer); }).forEach(function(it){
-      var g = el('g',{class:'c','data-id':it.id,tabindex:0,role:'button',
+      var hidden = state.vis[it.layer] === false;
+      var g = el('g',{class:'c','data-id':it.id,tabindex: hidden ? -1 : 0,role:'button',
         'aria-label':it.label.replace(/\n/g,' ')+', '+layerName(it.layer)+', '+it.d+' foot diameter',
-        opacity: state.vis[it.layer] !== false ? 1 : 0.2});
+        opacity: hidden ? 0.2 : 1});
+      // circles on an unchecked layer are locked: clicks pass through them, so they can't be dragged or selected
+      if(hidden){ g.setAttribute('pointer-events', 'none'); g.setAttribute('aria-disabled', 'true'); }
       if(state.view === 'planting'){
         g.appendChild(el('circle',{cx:it.x*S,cy:it.y*S,r:16,fill:'#000','fill-opacity':0}));
         iconParts(icons[plantKey(it)], it.color, it.x*S, it.y*S, 11).forEach(function(n){ g.appendChild(n); });
@@ -1777,7 +1786,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if((e.key === 'Delete' || e.key === 'Backspace') && state.sel){ e.preventDefault(); $('del').click(); return; }
     var dirs = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]};
     if(dirs[e.key] && state.sel){
-      var it = cur(); if(!it) return;
+      var it = cur(); if(!it || state.vis[it.layer] === false) return;
       e.preventDefault();
       var stp = e.shiftKey ? (state.cell || 1) : 0.25;
       hKey = 'nudge:' + it.id;

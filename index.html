@@ -151,6 +151,14 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .mh{font-size:12px;font-weight:600;color:var(--muted);margin:8px 0 0;position:sticky;top:0;z-index:1;background:var(--panel);padding:2px 0}
 .lay{display:flex;gap:6px;align-items:center;margin-bottom:6px;font-size:13px}
 .lay span{flex:1;min-width:0;overflow-wrap:anywhere}
+.laysec{padding:8px 0 4px}
+.laysec .lay{font-size:14px;padding:4px 0;margin:0}
+#layMsg:empty{display:none}
+#saveRow[hidden],#layouts[hidden]{display:none}
+/* secondary actions: no border or shadow until hovered */
+.btn.quiet{border-color:transparent;box-shadow:none;color:var(--muted)}
+.btn.quiet:not(:disabled):hover{background:var(--field);color:var(--ink)}
+.btn.quiet:not(:disabled):active{transform:none}
 .layh{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 .lay .btn{padding:4px 10px;font-size:12.5px}
 .lay .btn .ico{width:13px;height:13px}
@@ -356,11 +364,16 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
     </div>
     <div class="box">
       <h2>Saved layouts</h2>
-      <div class="row" style="flex-wrap:nowrap"><input type="text" id="tplName" placeholder="Layout name" maxlength="40" aria-label="Layout name"><button class="btn primary ibtn" id="saveLayout"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 7H7m10 14v-3.2c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C14.72 13 13.88 13 12.2 13h-.4c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C7 15.28 7 16.12 7 17.8V21m10 0H7m10 0a4 4 0 0 0 4-4V9.053c0-1.018-.217-1.542-.937-2.262l-2.854-2.854C16.49 3.217 15.966 3 14.947 3H9.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C3 6.04 3 7.16 3 9.4V17a4 4 0 0 0 4 4"/></svg>Save</button></div>
-      <div id="layouts" style="margin-top:10px"></div>
-      <div class="row" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
-        <button class="btn ibtn" id="planSave"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 12.188a15 15 0 0 0 2.556 2.655A.7.7 0 0 0 12 15m3-2.812a15 15 0 0 1-2.556 2.655A.7.7 0 0 1 12 15m0 0V4"/></svg>Save plan file</button>
-        <button class="btn ibtn" id="planOpen"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 6.812a15 15 0 0 1 2.556-2.655A.7.7 0 0 1 12 4m3 2.812a15 15 0 0 0-2.556-2.655A.7.7 0 0 0 12 4m0 0v11"/></svg><svg class="ico folder-tpl" hidden aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.961 9.997c-.289-.017-.647-.017-1.102-.017H8.445c-.875 0-1.313 0-1.68.151a2 2 0 0 0-.82.627c-.242.314-.357.736-.587 1.581L4.1 16.96c-.374 1.374-.561 2.061-.402 2.604a2 2 0 0 0 .963 1.192m16.3-10.758c.39.023.654.078.861.205.317.194.55.5.655.856.119.407-.021.922-.302 1.952l-.89 3.271c-.46 1.69-.69 2.535-1.175 3.163a4 4 0 0 1-1.64 1.253c-.733.303-1.61.303-3.36.303H7.187c-1.338 0-2.047 0-2.527-.245m16.3-10.758c-.047-.783-.155-1.339-.397-1.813a4 4 0 0 0-1.748-1.748C17.96 6 16.84 6 14.6 6h-1.316c-.47 0-.704 0-.917-.065a1.5 1.5 0 0 1-.517-.276c-.172-.142-.302-.337-.562-.728l-.575-.862c-.261-.391-.391-.586-.563-.728a1.5 1.5 0 0 0-.517-.276C9.42 3 9.185 3 8.716 3H8.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C2 6.04 2 7.16 2 9.4v5.2c0 2.24 0 3.36.436 4.216a4 4 0 0 0 1.748 1.748q.224.114.477.19"/></svg>Open plan file</button>
+      <div class="pbtns" style="margin-top:4px">
+        <button class="btn ibtn" id="saveLayBtn" aria-expanded="false" aria-controls="saveRow"><svg class="ico" aria-hidden="true" focusable="false" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 7H7m10 14v-3.2c0-1.68 0-2.52-.327-3.162a3 3 0 0 0-1.311-1.311C14.72 13 13.88 13 12.2 13h-.4c-1.68 0-2.52 0-3.162.327a3 3 0 0 0-1.311 1.311C7 15.28 7 16.12 7 17.8V21m10 0H7m10 0a4 4 0 0 0 4-4V9.053c0-1.018-.217-1.542-.937-2.262l-2.854-2.854C16.49 3.217 15.966 3 14.947 3H9.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C3 6.04 3 7.16 3 9.4V17a4 4 0 0 0 4 4"/></svg> Save layout</button>
+        <button class="btn ibtn" id="loadLayBtn"><svg class="ico" aria-hidden="true" focusable="false" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.961 9.997c-.289-.017-.647-.017-1.102-.017H8.445c-.875 0-1.313 0-1.68.151a2 2 0 0 0-.82.627c-.242.314-.357.736-.587 1.581L4.1 16.96c-.374 1.374-.561 2.061-.402 2.604a2 2 0 0 0 .963 1.192m16.3-10.758c.39.023.654.078.861.205.317.194.55.5.655.856.119.407-.021.922-.302 1.952l-.89 3.271c-.46 1.69-.69 2.535-1.175 3.163a4 4 0 0 1-1.64 1.253c-.733.303-1.61.303-3.36.303H7.187c-1.338 0-2.047 0-2.527-.245m16.3-10.758c-.047-.783-.155-1.339-.397-1.813a4 4 0 0 0-1.748-1.748C17.96 6 16.84 6 14.6 6h-1.316c-.47 0-.704 0-.917-.065a1.5 1.5 0 0 1-.517-.276c-.172-.142-.302-.337-.562-.728l-.575-.862c-.261-.391-.391-.586-.563-.728a1.5 1.5 0 0 0-.517-.276C9.42 3 9.185 3 8.716 3H8.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C2 6.04 2 7.16 2 9.4v5.2c0 2.24 0 3.36.436 4.216a4 4 0 0 0 1.748 1.748q.224.114.477.19"/></svg> Load layout</button>
+      </div>
+      <div class="row" id="saveRow" style="flex-wrap:nowrap;margin-top:8px" hidden><input type="text" id="tplName" placeholder="Name this layout" maxlength="40" aria-label="Layout name"><button class="btn primary" id="saveLayout">Save</button></div>
+      <p class="sub" id="layMsg" role="status" style="margin:6px 0 0"></p>
+      <div id="layouts" hidden></div>
+      <div class="pbtns" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <button class="btn ibtn quiet" id="planSave"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 12.188a15 15 0 0 0 2.556 2.655A.7.7 0 0 0 12 15m3-2.812a15 15 0 0 1-2.556 2.655A.7.7 0 0 1 12 15m0 0V4"/></svg>Save plan file</button>
+        <button class="btn ibtn quiet" id="planOpen"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 6.812a15 15 0 0 1 2.556-2.655A.7.7 0 0 1 12 4m3 2.812a15 15 0 0 0-2.556-2.655A.7.7 0 0 0 12 4m0 0v11"/></svg><svg class="ico folder-tpl" hidden aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.961 9.997c-.289-.017-.647-.017-1.102-.017H8.445c-.875 0-1.313 0-1.68.151a2 2 0 0 0-.82.627c-.242.314-.357.736-.587 1.581L4.1 16.96c-.374 1.374-.561 2.061-.402 2.604a2 2 0 0 0 .963 1.192m16.3-10.758c.39.023.654.078.861.205.317.194.55.5.655.856.119.407-.021.922-.302 1.952l-.89 3.271c-.46 1.69-.69 2.535-1.175 3.163a4 4 0 0 1-1.64 1.253c-.733.303-1.61.303-3.36.303H7.187c-1.338 0-2.047 0-2.527-.245m16.3-10.758c-.047-.783-.155-1.339-.397-1.813a4 4 0 0 0-1.748-1.748C17.96 6 16.84 6 14.6 6h-1.316c-.47 0-.704 0-.917-.065a1.5 1.5 0 0 1-.517-.276c-.172-.142-.302-.337-.562-.728l-.575-.862c-.261-.391-.391-.586-.563-.728a1.5 1.5 0 0 0-.517-.276C9.42 3 9.185 3 8.716 3H8.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C2 6.04 2 7.16 2 9.4v5.2c0 2.24 0 3.36.436 4.216a4 4 0 0 0 1.748 1.748q.224.114.477.19"/></svg>Open plan file</button>
         <input type="file" id="planFile" accept=".json,application/json" hidden>
       </div>
       <p class="sub explain" id="planMsg" role="status" style="margin-top:8px">A plan file holds your block plan, plant menu and saved layouts, so you can back them up or move them to another computer.</p>
@@ -496,8 +509,8 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
     <div class="gtable"><table>
       <thead><tr><th>To do this</th><th>Use</th><th>Where</th></tr></thead>
       <tbody>
-        <tr><td>Keep a version of this block to come back to in this browser</td><td>Name it, then <b>Save</b></td><td>Saved layouts</td></tr>
-        <tr><td>Start from a ready-made plan</td><td>Load <b>“Top Picks” for close to home</b></td><td>Saved layouts</td></tr>
+        <tr><td>Keep a version of this block to come back to in this browser</td><td><b>Save layout</b>, then name it</td><td>Saved layouts</td></tr>
+        <tr><td>Start from a ready-made plan</td><td><b>Load layout</b>, then <b>“Top Picks” for close to home</b></td><td>Saved layouts</td></tr>
         <tr><td>Back up everything, or move it to another computer</td><td><b>Save plan file</b>, then <b>Open plan file</b></td><td>Saved layouts</td></tr>
         <tr><td>Print or share the diagram</td><td><b>PNG</b> or <b>PDF</b>, with an optional title and notes</td><td>More options</td></tr>
       </tbody>
@@ -564,6 +577,13 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       <button class="btn primary" id="csvChoose">Choose CSV file</button>
       <button class="btn" id="csvExample">Download example CSV</button>
     </div>
+  </div>
+</dialog>
+<dialog id="layDlg" aria-labelledby="layTitle" style="width:min(560px,94vw)">
+  <div class="dh"><h2 id="layTitle">Load a layout</h2><button class="btn ibtn" id="layClose"><svg class="ico" aria-hidden="true" focusable="false" width="14" height="14" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 6 6 18M6 6l12 12"/></svg>Close</button></div>
+  <div class="db" style="padding-top:10px">
+    <p class="sub" style="margin:0 0 8px">Loading a layout replaces the current block plan. Layouts you save with Save layout appear under User presets.</p>
+    <div class="prlist" id="layList"></div>
   </div>
 </dialog>
 <dialog id="presetDlg" aria-labelledby="prTitle" style="width:min(640px,94vw)">
@@ -1861,20 +1881,32 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   // ---- saved layouts ----
   // built-in layouts from the Native Plant Salvage Foundation: always listed, can't be deleted
   var BUILTIN_LAYOUTS = [{"name":"“Top Picks” for close to home","w":20,"h":15,"vis":{"trees":true,"large":true,"small":true,"herb":true},"items":[{"id":94,"label":"PIN\nCON","d":10,"color":"#332288","pattern":"solid","layer":"trees","fs":22,"menu":"Pinus contorta var. contorta (Shore Pine)","src":"tmw9jomk14fnv","x":17.737,"y":1.37},{"id":95,"label":"PIN\nCON","d":10,"color":"#332288","pattern":"solid","layer":"trees","fs":22,"menu":"Pinus contorta var. contorta (Shore Pine)","src":"tmw9jomk14fnv","x":3.404,"y":3.523},{"id":96,"label":"CAL\nDEC","d":10,"color":"#44AA99","pattern":"solid","layer":"trees","fs":22,"menu":"Calocedrus decurrens (Incense Cedar)","src":"tmw9jomk1xmjs","x":11.622,"y":9.413},{"id":97,"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","src":"tmw9jomk1qksn","x":5.688,"y":10.098},{"id":98,"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","src":"tmw9jomk1qksn","x":0.321,"y":1.707},{"id":99,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":8.002,"y":0.479},{"id":100,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":16.923,"y":14.178},{"id":101,"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","src":"tmw9jomk1grlj","x":14.606,"y":13.241},{"id":102,"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","src":"tmw9jomk1e34i","x":0.424,"y":12.23},{"id":103,"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","src":"tmw9jomk1e34i","x":15.534,"y":6.662},{"id":104,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":12.177,"y":1.064},{"id":105,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":19.031,"y":9.134},{"id":106,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":17.07,"y":10.984},{"id":107,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":4.486,"y":13.844},{"id":108,"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","src":"tmw9jp8sz854v","x":0.255,"y":8.161},{"id":109,"label":"PYR\nCOC","d":7,"color":"#DDCC77","pattern":"solid","layer":"large","fs":22,"menu":"Pyracantha coccinea (Scarlet Firethorn)","src":"tmw9jp8szcumn","x":10.744,"y":4.135},{"id":110,"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","src":"tmw9jp8sz0a16","x":8.597,"y":14.111},{"id":111,"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","src":"tmw9jp8sz0a16","x":19.641,"y":4.352},{"id":112,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":3.866,"y":0.171},{"id":113,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":3.358,"y":6.664},{"id":114,"label":"PHI\nLEW","d":5,"color":"#CC6677","pattern":"solid","layer":"large","fs":22,"menu":"Philadelphus lewisii (Mock-orange)","src":"tmw9jp8szno5k","x":19.601,"y":14.667},{"id":115,"label":"RIB\nSAN","d":5,"color":"#AA4499","pattern":"solid","layer":"large","fs":22,"menu":"Ribes sanguineum (Red-flowering Currant)","src":"tmw9jp8szinlh","x":19.878,"y":7.564},{"id":116,"label":"RIB\nSAN","d":5,"color":"#AA4499","pattern":"solid","layer":"large","fs":22,"menu":"Ribes sanguineum (Red-flowering Currant)","src":"tmw9jp8szinlh","x":12.189,"y":15},{"id":117,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":9.93,"y":0},{"id":118,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":13.765,"y":0.136},{"id":119,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.233,"y":0.911},{"id":120,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.706,"y":0},{"id":121,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":17.213,"y":0.482},{"id":122,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":19.057,"y":0},{"id":123,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":19.469,"y":1.813},{"id":124,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":14.138,"y":9.908},{"id":125,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":9.968,"y":11.621},{"id":126,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":8.749,"y":10.737},{"id":127,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":2.734,"y":10.219},{"id":128,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":0,"y":5.747},{"id":129,"label":"SYM\nALB","d":3,"color":"#44AA99","pattern":"vert","layer":"small","fs":22,"menu":"Symphoricarpos albus (Snowberry)","src":"tmw9jp8sz0re4","x":15.073,"y":15},{"id":130,"label":"RUB\nPAR","d":3,"color":"#88CCEE","pattern":"vert","layer":"small","fs":22,"menu":"Rubus parviflorus (Thimbleberry)","src":"tmw9jp8sz9wwv","x":20,"y":12.125},{"id":131,"label":"RUB\nPAR","d":3,"color":"#88CCEE","pattern":"vert","layer":"small","fs":22,"menu":"Rubus parviflorus (Thimbleberry)","src":"tmw9jp8sz9wwv","x":1.178,"y":14.273}],"tpls":[{"id":"tmw9jomk1xmjs","label":"CAL\nDEC","menu":"Calocedrus decurrens (Incense Cedar)","d":10,"layer":"trees","color":"#44AA99","pattern":"solid"},{"id":"tmw9jomk14fnv","label":"PIN\nCON","menu":"Pinus contorta var. contorta (Shore Pine)","d":10,"layer":"trees","color":"#332288","pattern":"solid"},{"label":"ARB\nUNECOM","d":5,"color":"#88CCEE","pattern":"solid","layer":"large","fs":22,"menu":"Arbutus unedo 'Compacta' (Dwarf Strawberry Tree)","id":"tmw9jomk1qksn"},{"label":"AME\nALN","d":5,"color":"#117733","pattern":"solid","layer":"large","fs":22,"menu":"Amelanchier alnifolia (Western Serviceberry)","id":"tmw9jomk1grlj"},{"label":"HOL\nDIS","d":5,"color":"#999933","pattern":"solid","layer":"large","fs":22,"menu":"Holodiscus discolor (Oceanspray)","id":"tmw9jomk1e34i"},{"label":"PYR\nCOC","d":7,"color":"#DDCC77","pattern":"solid","layer":"large","fs":22,"menu":"Pyracantha coccinea (Scarlet Firethorn)","id":"tmw9jp8szcumn"},{"id":"tmw9jp8szno5k","label":"PHI\nLEW","menu":"Philadelphus lewisii (Mock-orange)","d":5,"layer":"large","color":"#CC6677","pattern":"solid"},{"label":"PHY\nCAP","d":5,"color":"#882255","pattern":"solid","layer":"large","fs":22,"menu":"Physocarpus capitatus (Pacific Ninebark)","id":"tmw9jp8sz0a16"},{"id":"tmw9jp8szinlh","label":"RIB\nSAN","menu":"Ribes sanguineum (Red-flowering Currant)","d":5,"layer":"large","color":"#AA4499","pattern":"solid"},{"label":"MAH\nAQU","d":5,"color":"#332288","pattern":"holes","layer":"large","fs":22,"menu":"Mahonia aquifolium (Tall Oregon-grape)","id":"tmw9jp8sz854v"},{"id":"tmw9jp8sz9wwv","label":"RUB\nPAR","menu":"Rubus parviflorus (Thimbleberry)","d":3,"layer":"small","color":"#88CCEE","pattern":"vert"},{"id":"tmw9jp8sz0re4","label":"SYM\nALB","menu":"Symphoricarpos albus (Snowberry)","d":3,"layer":"small","color":"#44AA99","pattern":"vert"}],"cell":1,"major":5,"commonNames":false,"compass":true,"north":41,"opacity":0.87,"autoOrder":true,"view":"spacing"}];
+  var layOpen = {u:true, n:true};
   function renderLayouts(){
-    var b = $('layouts'); b.innerHTML = '';
+    var b = $('layList'); b.innerHTML = '';
     var L = state.layouts || [];
-    var bh = document.createElement('p'); bh.className = 'layh'; bh.textContent = 'From the Native Plant Salvage Foundation'; b.appendChild(bh);
-    BUILTIN_LAYOUTS.forEach(function(lay){ b.appendChild(layRow(lay, -1)); });
-    var uh = document.createElement('p'); uh.className = 'layh'; uh.textContent = 'Your layouts'; b.appendChild(uh);
-    if(!L.length){ var e = document.createElement('p'); e.className = 'sub explain'; e.style.margin = '0'; e.textContent = 'Name and save the current block plan to reuse it later.'; b.appendChild(e); return; }
-    L.forEach(function(lay, i){ b.appendChild(layRow(lay, i)); });
+    function section(title, key, rows, empty){
+      var open = !!layOpen[key];
+      var t = document.createElement('button'); t.type = 'button'; t.className = 'prtop prtog'; t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var nm = document.createElement('span'); nm.textContent = title; t.appendChild(nm);
+      var sm = document.createElement('small'); sm.textContent = rows.length + (rows.length === 1 ? ' layout' : ' layouts'); t.appendChild(sm);
+      t.onclick = function(){ layOpen[key] = !layOpen[key]; renderLayouts(); };
+      b.appendChild(t);
+      if(!open) return;
+      var wrap = document.createElement('div'); wrap.className = 'laysec';
+      if(!rows.length){ var e = document.createElement('p'); e.className = 'sub'; e.style.margin = '8px 0'; e.textContent = empty; wrap.appendChild(e); }
+      rows.forEach(function(r){ wrap.appendChild(r); });
+      b.appendChild(wrap);
+    }
+    section('User presets', 'u', L.map(function(lay, i){ return layRow(lay, i); }), 'No saved layouts yet. Use Save layout to keep the current block plan here.');
+    section('Native Plant Salvage Foundation', 'n', BUILTIN_LAYOUTS.map(function(lay){ return layRow(lay, -1); }), '');
   }
   function layRow(lay, i){
       var r = document.createElement('div'); r.className = 'lay';
       var n = document.createElement('span'); n.textContent = lay.name;
       var ld = document.createElement('button'); ld.className = 'btn ibtn'; var fsvg = document.querySelector('svg.folder-tpl').cloneNode(true); fsvg.removeAttribute('hidden'); fsvg.classList.remove('folder-tpl'); ld.appendChild(fsvg); ld.appendChild(document.createTextNode('Load'));
       ld.onclick = function(){
+        $('layDlg').close();
         if(state.items.length) ask('Replace current block plan?', 'Replace the current block plan with '+qn(lay.name)+'?', 'Replace', doLoad); else doLoad();
       };
       function doLoad(){
@@ -1894,6 +1926,18 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       }
       return r;
   }
+  // Save layout shows a name field; Load layout opens the layouts window
+  function showSaveRow(on){
+    $('saveRow').hidden = !on; $('saveLayBtn').setAttribute('aria-expanded', on ? 'true' : 'false');
+    if(on){ $('layMsg').textContent = ''; $('tplName').focus(); }
+  }
+  $('saveLayBtn').onclick = function(){ showSaveRow($('saveRow').hidden); };
+  $('tplName').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); $('saveLayout').click(); }
+    if(e.key === 'Escape'){ e.preventDefault(); showSaveRow(false); $('saveLayBtn').focus(); }
+  });
+  $('loadLayBtn').onclick = function(){ renderLayouts(); $('layDlg').showModal(); $('layList').scrollTop = 0; };
+  $('layClose').onclick = function(){ $('layDlg').close(); };
   $('saveLayout').onclick = function(){
     var name = $('tplName').value.trim();
     if(!name){ $('tplName').focus(); return; }
@@ -1903,6 +1947,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var i = state.layouts.findIndex(function(l){ return l.name === name; });
     if(i >= 0) state.layouts[i] = snap; else state.layouts.push(snap);
     save(); renderLayouts(); say('Saved “'+name+'”');
+    $('tplName').value = ''; showSaveRow(false);
+    var m = $('layMsg'); m.textContent = 'Saved ' + qn(name) + '. Find it under Load layout.';
+    clearTimeout(m._t); m._t = setTimeout(function(){ m.textContent = ''; }, 6000);
   };
 
   // ---- save the Add a plant menu as a user preset ----

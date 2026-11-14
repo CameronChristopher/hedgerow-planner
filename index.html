@@ -155,6 +155,11 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .laysec .lay{font-size:14px;padding:4px 0;margin:0}
 #layMsg:empty{display:none}
 #saveRow[hidden],#layouts[hidden]{display:none}
+/* number fields: a little shorter and slimmer */
+body input[type=number]{padding:4px 6px}
+body .size input[type=number]{width:48px;padding:4px}
+body .more input[type=number]{width:54px;padding:4px 6px}
+body .dia input[type=number]{width:68px;padding:4px 6px}
 /* secondary actions: no border or shadow until hovered */
 .btn.quiet{border-color:transparent;box-shadow:none;color:var(--muted)}
 .btn.quiet:not(:disabled):hover{background:var(--field);color:var(--ink)}
@@ -217,10 +222,16 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .ddadd{display:flex;gap:6px;margin:10px 0 4px}
 .ddadd input{flex:1;min-width:0;padding:6px 8px}
 .vsel{display:flex;align-items:center;gap:6px;margin:0;font-size:13px}
-.seg{display:inline-flex;border:1px solid var(--ctl);border-radius:8px;padding:2px;gap:2px;background:var(--panel)}
-.seg button{border:0;background:transparent;border-radius:6px;padding:6px 12px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg{position:relative;display:inline-flex;border:1px solid var(--ctl);border-radius:9px;padding:3px;gap:2px;background:var(--bg)}
+.seg button{position:relative;z-index:1;border:0;background:transparent;border-radius:6px;padding:6px 12px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:color .15s}
 .seg button:hover{color:var(--ink)}
-.seg button[aria-checked=true]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-checked=true]{color:var(--ink);font-weight:600}
+/* the raised thumb behind the chosen side; it slides when the view changes */
+.segthumb{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:6px;background:var(--panel);border:1px solid var(--ctl);box-shadow:0 1px 3px var(--btn-shadow,rgba(0,0,0,.18));transition:transform .2s ease,width .2s ease;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.segthumb{transition:none}}
+/* a button whose panel is open looks pressed in */
+.btn[aria-expanded=true]{background:var(--bg);border-color:var(--ink);color:var(--ink);box-shadow:inset 0 1px 3px rgba(0,0,0,.18)}
+.btn[aria-expanded=true]:not(:disabled):hover{background:var(--bg)}
 .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .key{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:0 28px;align-items:start}
 .kcol{min-width:0}
@@ -285,6 +296,11 @@ dialog::backdrop{background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);ba
 .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px 32px}
 .mg{border:0;margin:0;padding:0;min-width:0;display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:8px 10px;align-content:start}
 .mg legend{padding:0;margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink)}
+/* light dividers between the option groups: a line in the gap to the left of each group, running up beside its heading;
+   the one left of the first column falls outside the grid and is clipped away */
+.mgrid{overflow:hidden;margin:-4px;padding:4px}
+.mg{position:relative}
+.mg::before{content:"";position:absolute;top:-27px;bottom:0;left:-16px;width:1px;background:var(--line);pointer-events:none}
 .more label{margin:0;font-size:13px}
 .mrow{display:contents}
 .mrow.off>*{opacity:.45}
@@ -396,7 +412,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       </details>
       <div class="vsel"><span class="ddlab" id="viewLab">View</span>
         <div class="seg" id="viewSeg" role="radiogroup" aria-labelledby="viewLab">
-          <button type="button" role="radio" data-view="spacing">Spacing diagram</button><button type="button" role="radio" data-view="planting">Planting diagram</button>
+          <span class="segthumb" aria-hidden="true"></span><button type="button" role="radio" data-view="spacing">Spacing diagram</button><button type="button" role="radio" data-view="planting">Planting diagram</button>
         </div>
       </div>
     </div>
@@ -1123,7 +1139,16 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   var segBtns = [].slice.call($('viewSeg').querySelectorAll('button'));
   function renderViews(){
     segBtns.forEach(function(b){ var on = b.dataset.view === state.view; b.setAttribute('aria-checked', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    placeThumb();
   }
+  function placeThumb(){
+    var on = segBtns.filter(function(b){ return b.dataset.view === state.view; })[0], th = $('viewSeg').querySelector('.segthumb');
+    if(!on || !th || !on.offsetWidth) return;
+    th.style.width = on.offsetWidth + 'px'; th.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+  }
+  // fonts loading late change the button widths, so place the thumb again once they're ready
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(placeThumb);
+  window.addEventListener('resize', placeThumb);
   function setView(v){ if(state.view === v) return; state.view = v; render(); }
   segBtns.forEach(function(b, k){
     b.onclick = function(){ setView(b.dataset.view); };

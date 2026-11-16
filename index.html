@@ -1412,12 +1412,30 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var t = el('text',{x:len+8, y:y, 'font-family':FF, 'font-size':12, 'dominant-baseline':'central', style:'fill:var(--ink)'});
       t.textContent = label; g.appendChild(t);
     }
+    // one combined bar: the large square's length, split into small squares (alternating fill)
+    function combined(y){
+      var total = maj * S; if(total > W) total = cell * S;
+      if(total > W) return 0;
+      var unit = cell * S, n = Math.round(total / unit), hgt = 8, top = y - hgt/2;
+      if(n > 20){ n = 1; unit = total; }
+      for(var i = 0; i < n; i++){
+        g.appendChild(el('rect',{x:i*unit, y:top, width:unit, height:hgt, style:'stroke:var(--ink);stroke-width:1.5;fill:' + (i % 2 ? 'transparent' : 'var(--ink)')}));
+      }
+      function lab(x, s, anchor){
+        var t = el('text',{x:x, y:y + hgt/2 + 14, 'font-family':FF, 'font-size':12, 'text-anchor':anchor, style:'fill:var(--ink)'});
+        t.textContent = s; g.appendChild(t);
+      }
+      var endFt = Math.round(total / S * 100) / 100;
+      lab(0, '0', 'middle');
+      if(n > 1 && unit >= 22) lab(unit, String(Math.round(cell*100)/100), 'middle');
+      lab(total, fmtFt(endFt), 'middle');
+      return total;
+    }
     var B = scaleBase();
-    if(state.scale === false){} else if(maj === cell) bar(cell, B + 24, fmtFt(cell));
-    else { bar(cell, B + 24, fmtFt(cell)); bar(maj, B + 52, fmtFt(maj)); }
+    var barEnd = state.scale !== false ? combined(B + 36) : 0;
     if(state.compass){
       var deg = state.north || 0, th = deg * Math.PI / 180;
-      var cg = el('g',{transform:'translate('+(W - 40)+' '+(B + 44)+')'});
+      var cg = el('g',{transform:'translate('+(barEnd ? barEnd + 64 : 30)+' '+(B + 36)+')'});
       cg.appendChild(el('circle',{r:18, fill:'none', style:'stroke:var(--ink);stroke-opacity:0.5;stroke-width:1.2'}));
       var ar = el('g',{transform:'rotate('+deg+')'});
       ar.appendChild(el('path',{d:'M0 -15L5 0L-5 0Z', style:'fill:var(--ink)'}));

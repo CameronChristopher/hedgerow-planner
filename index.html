@@ -332,6 +332,12 @@ body .dia input[type=number]{width:68px;padding:4px 6px}
 .more label{margin:0;font-size:13px}
 .mrow{display:contents}
 .mrow.off>*{opacity:.45}
+.mrow[hidden]{display:none}
+.tip{position:relative;display:inline-flex;vertical-align:middle}
+.tipbtn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer}
+.tipbtn:hover,.tipbtn[aria-expanded=true]{color:var(--ink);background:var(--bg)}
+.tipbox{position:fixed;top:0;left:0;z-index:60;width:240px;padding:8px 10px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-size:12.5px;font-weight:400;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.2);text-transform:none;letter-spacing:0}
+.tipbox[hidden]{display:none}
 .mfield{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}
 .mchk{display:flex;align-items:center;gap:8px;color:var(--ink);grid-column:1/-1}
 .more input[type=number]{width:64px;padding:6px 6px}
@@ -462,21 +468,21 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <fieldset class="mg"><legend>Grid</legend>
           <div class="mrow"><label for="gc">Square size</label><span class="mfield"><input type="number" id="gc" min="0.25" max="10" step="0.25"> ft</span></div>
           <div class="mrow"><label for="gm">Darker lines every</label><span class="mfield"><input type="number" id="gm" min="0.25" max="100" step="0.25"> ft</span></div>
-          <label class="mchk"><input type="checkbox" id="gapOn" aria-describedby="gapHelp"> Add a gap</label>
-          <div class="mrow" id="gapRow"><label for="gapFt">Gap height</label><span class="mfield"><input type="number" id="gapFt" min="0.25" step="0.25" aria-describedby="gapHelp"> ft</span></div>
-          <p class="sub explain" id="gapHelp" style="grid-column:1/-1;margin:0">Splits the block plan into two equal grids, one above the other, with an open strip between them.</p>
+          <label class="mchk"><input type="checkbox" id="gapOn" aria-describedby="gapHelp"> Add a gap <span class="tip"><button type="button" class="tipbtn" aria-label="About Add a gap" aria-expanded="false" aria-controls="gapHelp"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/></svg></button><span class="tipbox" id="gapHelp" role="tooltip" hidden>Splits the block plan into two equal grids, one above the other, with an open strip between them.</span></span></label>
+          <div class="mrow" id="gapRow" hidden><label for="gapFt">Gap height</label><span class="mfield"><input type="number" id="gapFt" min="0.25" step="0.25"> ft</span></div>
+          <label class="mchk"><input type="checkbox" id="stripOn" aria-describedby="stripHelp"> Add an herbaceous strip <span class="tip"><button type="button" class="tipbtn" aria-label="About Add an herbaceous strip" aria-expanded="false" aria-controls="stripHelp"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/></svg></button><span class="tipbox" id="stripHelp" role="tooltip" hidden>Adds a separate grid below the block plan, the same width, for a strip of low herbaceous plants. Set its height in feet.</span></span></label>
+          <div class="mrow" id="stripRow" hidden><label for="stripN">Strip height</label><span class="mfield"><input type="number" id="stripN" min="0.25" max="60" step="0.25"> ft</span></div>
+          <div class="mrow" id="stripSepRow" hidden><label for="stripSep">Separation</label><span class="mfield"><input type="number" id="stripSep" min="0" max="60" step="0.25"> ft</span></div>
         </fieldset>
         <fieldset class="mg"><legend>Display options</legend>
           <label class="mchk"><input type="checkbox" id="scOn"> Show scale bar</label>
           <label class="mchk"><input type="checkbox" id="cnOn"> Show common names in key</label>
           <label class="mchk"><input type="checkbox" id="cpOn"> Show compass</label>
-          <div class="mrow" id="northRow"><label for="cpDeg">North points</label><span class="mfield"><input type="number" id="cpDeg" min="0" max="359" step="1" aria-describedby="cpHelp"> ° clockwise</span>
-          <span class="mhelp" id="cpHelp">0° means north is at the top of the diagram.</span></div>
+          <div class="mrow" id="northRow"><label for="cpDeg">North points <span class="tip"><button type="button" class="tipbtn" aria-label="About North points" aria-expanded="false" aria-controls="cpHelp"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/></svg></button><span class="tipbox" id="cpHelp" role="tooltip" hidden>0° means north is at the top of the diagram.</span></span></label><span class="mfield"><input type="number" id="cpDeg" min="0" max="359" step="1" aria-describedby="cpHelp"> ° clockwise</span></div>
         </fieldset>
         <fieldset class="mg"><legend>Circles</legend>
           <div class="mrow"><label for="opa">Opacity</label><span class="mfield"><input type="range" id="opa" min="10" max="100" step="1"> <span id="opaVal"></span></span></div>
-          <label class="mchk"><input type="checkbox" id="aoOn" aria-describedby="aoHelp"> Auto order</label>
-          <span class="mhelp" id="aoHelp">Smaller circles always sit on top of larger ones.</span>
+          <label class="mchk"><input type="checkbox" id="aoOn" aria-describedby="aoHelp"> Auto order <span class="tip"><button type="button" class="tipbtn" aria-label="About Auto order" aria-expanded="false" aria-controls="aoHelp"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.25" fill="currentColor"/></svg></button><span class="tipbox" id="aoHelp" role="tooltip" hidden>Smaller circles always sit on top of larger ones.</span></span></label>
         </fieldset>
       </div>
       <div class="mexp">
@@ -786,7 +792,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   migratePatterns();
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} record(); }
   // ---- undo / redo ----
-  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','layerOrder','cell','major','scale','commonNames','compass','north','opacity','autoOrder','gapOn','gap'];
+  var hist = [], hIdx = -1, hTime = 0, applying = false, hKey = null, hLastKey = null, HKEYS = ['w','h','items','tpls','layers','layerOrder','cell','major','scale','commonNames','compass','north','opacity','autoOrder','gapOn','gap','stripOn','strip','stripSep'];
   function planSnap(){ var o = {}; HKEYS.forEach(function(k){ o[k] = state[k]; }); return JSON.stringify(o); }
   function updUndo(){ var u = $('undo'), r = $('redo'); if(u) u.disabled = hIdx <= 0; if(r) r.disabled = hIdx >= hist.length - 1; }
   function record(){
@@ -1079,7 +1085,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function openSpot(d){
     var r = d / 2, step = 0.5, best = null, bestGap = -Infinity;
     function axis(len){ if(d >= len) return [len / 2]; var a = []; for(var v = r; v <= len - r + 1e-6; v += step) a.push(v); return a; }
-    var ax = axis(state.w), ay = axis(state.h);
+    var ax = axis(state.w), ay = axis(state.h).filter(function(v){ return fitY(v) === v; });
+    if(!ay.length) ay = [fitY(state.h / 2)];
     for(var yi = 0; yi < ay.length; yi++){
       for(var xi = 0; xi < ax.length; xi++){
         var x = ax[xi], y = ay[yi], gap = Infinity;
@@ -1091,7 +1098,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         if(gap > bestGap){ bestGap = gap; best = {x:x, y:y}; }
       }
     }
-    return best || {x:state.w / 2, y:state.h / 2};
+    return best || {x:state.w / 2, y:fitY(state.h / 2)};
   }
   // highlight the starting point until it has been used once
   if(!state.prefs.usedCustom) $('addCustom').classList.add('primary');
@@ -1182,6 +1189,33 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   // fonts loading late change the button widths, so place the thumb again once they're ready
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(placeThumb);
   window.addEventListener('resize', placeThumb);
+  // (i) buttons: show their note in a small popup; one open at a time, closed by Escape or a click elsewhere
+  function closeTips(except){
+    document.querySelectorAll('.tipbtn[aria-expanded="true"]').forEach(function(b){
+      if(b === except) return; b.setAttribute('aria-expanded', 'false'); $(b.getAttribute('aria-controls')).hidden = true;
+    });
+  }
+  document.querySelectorAll('.tipbtn').forEach(function(b){
+    var box = $(b.getAttribute('aria-controls'));
+    b.addEventListener('click', function(e){
+      e.preventDefault(); e.stopPropagation();
+      var open = b.getAttribute('aria-expanded') !== 'true';
+      closeTips(b); b.setAttribute('aria-expanded', open ? 'true' : 'false'); box.hidden = !open;
+      if(open){ // place it under the button, kept on screen
+        var br = b.getBoundingClientRect(), w = box.offsetWidth;
+        box.style.left = Math.max(12, Math.min(br.left, window.innerWidth - w - 12)) + 'px';
+        box.style.top = (br.bottom + 6) + 'px';
+      }
+    });
+  });
+  document.addEventListener('click', function(e){ if(!e.target.closest('.tip')) closeTips(); });
+  window.addEventListener('resize', function(){ closeTips(); });
+  document.addEventListener('scroll', function(){ closeTips(); }, true);
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    var open = document.querySelector('.tipbtn[aria-expanded="true"]');
+    if(open){ closeTips(); open.focus(); e.stopPropagation(); }
+  }, true);
   function setView(v){ if(state.view === v) return; state.view = v; render(); }
   segBtns.forEach(function(b, k){
     b.onclick = function(){ setView(b.dataset.view); };
@@ -1336,7 +1370,25 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     render();
   }
   $('gc').onchange = setGrid; $('gm').onchange = setGrid;
-  $('gapOn').onchange = function(){ state.gapOn = this.checked; if(!(state.gap > 0)) state.gap = 5; render(); };
+  $('gapOn').onchange = function(){ state.gapOn = this.checked; if(!(state.gap > 0)) state.gap = 5; render(); if(this.checked) $('gapFt').focus(); };
+  $('stripOn').onchange = function(){
+    state.stripOn = this.checked; if(!(state.strip > 0)) state.strip = 3;
+    // plants that sat in the strip move back into the block plan when it is turned off
+    if(!this.checked) state.items.forEach(function(it){ it.y = clamp(it.y, 0, state.h); });
+    render(); if(this.checked) $('stripN').focus();
+  };
+  $('stripSep').onchange = function(){
+    var v = parseFloat(this.value); if(!(v >= 0)) v = state.stripSep || 0;
+    state.stripSep = clamp(Math.round(v*4)/4, 0, 60); state.stripOn = true;
+    state.items.forEach(function(it){ it.y = clamp(it.y, 0, totalH()); });
+    render();
+  };
+  $('stripN').onchange = function(){
+    var v = parseFloat(this.value); if(!(v > 0)) v = state.strip || 3;
+    state.strip = clamp(Math.round(v*4)/4, 0.25, 60); state.stripOn = true;
+    state.items.forEach(function(it){ it.y = clamp(it.y, 0, totalH()); });
+    render();
+  };
   $('gapFt').onchange = function(){
     var v = parseFloat(this.value);
     if(!(v > 0)) v = state.gap || 5;
@@ -1713,21 +1765,43 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   // same place in both views. Exports of the planting diagram trim to the icons instead.
   // where the scale bars and compass start: below the block plan and below any circle hanging over its bottom edge
   function scaleBase(){
-    var b = state.h*S;
+    var b = totalH()*S;
     state.items.forEach(function(it){ var r = state.view === 'planting' ? 22 : it.d*S/2 + 6; b = Math.max(b, it.y*S + r); });
     return b;
   }
   // the grid blocks as [top, bottom] in feet: the whole block plan, or two equal blocks around a centred gap
   function gapFt(){ return state.gapOn ? clamp(+state.gap || 0, 0, Math.max(0, state.h - 0.5)) : 0; }
+  // the herbaceous strip: a separate grid under the block plan, its height in feet
+  function stripFt(){ return state.stripOn ? clamp(+state.strip || 0, 0.25, 60) : 0; }
+  // the block plan plus any herbaceous strip, in feet
+  // open space between the block plan and the strip
+  function stripSepFt(){ return state.stripOn ? clamp(+state.stripSep || 0, 0, 60) : 0; }
+  function totalH(){ return state.h + (state.stripOn ? stripSepFt() + stripFt() : 0); }
   function gridBlocks(){
-    var g = gapFt();
-    if(!(g > 0)) return [[0, state.h]];
-    var each = (state.h - g) / 2;
-    return [[0, each], [each + g, state.h]];
+    var g = gapFt(), out;
+    if(!(g > 0)) out = [[0, state.h]];
+    else { var each = (state.h - g) / 2; out = [[0, each], [each + g, state.h]]; }
+    if(stripFt() > 0) out.push([state.h + stripSepFt(), totalH()]);
+    return out;
+  }
+  // keep a circle's centre on a grid: one in a gap or separation moves to the nearest grid edge,
+  // or across to the next grid when nudged in that direction (dir +1 down, -1 up)
+  function fitY(y, dir){
+    var bl = gridBlocks(), top = 0, bot = totalH();
+    y = clamp(y, top, bot);
+    for(var i = 0; i < bl.length; i++) if(y >= bl[i][0] - 1e-9 && y <= bl[i][1] + 1e-9) return y;
+    for(var j = 0; j < bl.length - 1; j++){
+      if(y > bl[j][1] && y < bl[j+1][0]){
+        if(dir > 0) return bl[j+1][0];
+        if(dir < 0) return bl[j][1];
+        return (y - bl[j][1]) <= (bl[j+1][0] - y) ? bl[j][1] : bl[j+1][0];
+      }
+    }
+    return y;
   }
   function showsScale(){ return state.scale !== false || !!state.compass; }
   function bounds(forExport){
-    var W = state.w*S, H = state.h*S, x0 = -80, y0 = -80, x1 = W + 80, y1 = H + 80;
+    var W = state.w*S, H = totalH()*S, x0 = -80, y0 = -80, x1 = W + 80, y1 = H + 80;
     if(showsScale()) y1 = Math.max(y1, scaleBase() + 72);
     state.items.forEach(function(it){
       var r = (forExport && state.view === 'planting') ? 22 : it.d*S/2 + 6;
@@ -1744,7 +1818,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var byW = (vp.clientWidth || 800) / (state.w*S + 2*pad);
     var below = pad;
     if(showsScale()){ var maxR = 0; state.items.forEach(function(it){ maxR = Math.max(maxR, state.view === 'planting' ? 22 : it.d*S/2 + 6); }); below = Math.max(pad, maxR + 72); }
-    var byH = (window.innerHeight * 0.72 - 4) / (state.h*S + pad + below);
+    var byH = (window.innerHeight * 0.72 - 4) / (totalH()*S + pad + below);
     return Math.min(byW, byH) * (state.zoom || 100) / 100;
   }
   function sizeSvg(prevB){
@@ -1808,6 +1882,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function order(k){ for(var i = 0; i < LAYERS.length; i++) if(LAYERS[i][0] === k) return i; return LAYERS.length; } // trees drawn first so smaller plants stay clickable
 
   function render(){
+    // no circle may sit in a gap or in the space above the herbaceous strip
+    state.items.forEach(function(it){ var y = fitY(it.y); if(y !== it.y) it.y = y; });
     var icons = iconIndexes();
     var W = state.w*S, H = state.h*S;
     var prevB = lastB; lastB = bounds();
@@ -1858,8 +1934,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     $('bw').value = state.w; $('bh').value = state.h;
     $('gc').value = state.cell || 1; $('gm').value = state.major || 5; $('gm').min = cell; $('gm').step = cell;
     $('aoOn').checked = !!state.autoOrder; $('scOn').checked = state.scale !== false; $('cnOn').checked = state.commonNames === true; $('cpOn').checked = !!state.compass;
-    $('gapOn').checked = !!state.gapOn; $('gapFt').value = state.gap || 5; $('gapFt').max = Math.max(0.25, state.h - 0.5); $('gapRow').classList.toggle('off', !state.gapOn);
-    $('cpDeg').disabled = !state.compass; $('northRow').classList.toggle('off', !state.compass); $('cpHelp').style.opacity = state.compass ? 1 : .45; $('cpDeg').value = state.north || 0;
+    $('gapOn').checked = !!state.gapOn; $('gapFt').value = state.gap || 5; $('gapFt').max = Math.max(0.25, state.h - 0.5); $('gapRow').hidden = !state.gapOn;
+    $('stripOn').checked = !!state.stripOn; $('stripN').value = state.strip || 3; $('stripRow').hidden = !state.stripOn;
+    $('stripSep').value = state.stripSep || 0; $('stripSepRow').hidden = !state.stripOn;
+    $('cpDeg').disabled = !state.compass; $('northRow').classList.toggle('off', !state.compass); $('cpDeg').value = state.north || 0;
     $('opa').value = Math.round((state.opacity === undefined ? 0.88 : state.opacity) * 100); $('opaVal').textContent = $('opa').value + '%';
     ;
     renderViews(); renderKey(icons);
@@ -1915,7 +1993,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     function move(ev){
       var p = pt(ev);
       it.x = clamp(ox + (p.x-start.x)/S, 0, state.w);
-      it.y = clamp(oy + (p.y-start.y)/S, 0, state.h);
+      // free to pass over a gap while dragging; render() on release moves it onto the nearest grid edge
+      it.y = clamp(oy + (p.y-start.y)/S, 0, totalH());
       if(ev.shiftKey){ it.x = Math.round(it.x*2)/2; it.y = Math.round(it.y*2)/2; }
       g.setAttribute('transform','translate('+((it.x-ox)*S)+' '+((it.y-oy)*S)+')');
       drawSel(); moved = true;
@@ -1954,7 +2033,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   $('dup').onclick = function(){
     var it = cur(); if(!it) return;
     var c = JSON.parse(JSON.stringify(it)); c.id = state.nextId++;
-    c.x = clamp(it.x+0.5, 0, state.w); c.y = clamp(it.y+0.5, 0, state.h);
+    c.x = clamp(it.x+0.5, 0, state.w); c.y = fitY(it.y+0.5);
     state.items.push(c); state.sel = c.id; render();
   };
   var cfDlg = $('confirmDlg'), cfCb = null;
@@ -1969,7 +2048,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function resize(){
     state.w = clamp(parseInt($('bw').value)||20, 4, 60);
     state.h = clamp(parseInt($('bh').value)||15, 4, 60);
-    state.items.forEach(function(it){ it.x = clamp(it.x, 0, state.w); it.y = clamp(it.y, 0, state.h); });
+    state.items.forEach(function(it){ it.x = clamp(it.x, 0, state.w); it.y = clamp(it.y, 0, totalH()); });
     render();
   }
   $('bw').onchange = resize; $('bh').onchange = resize;
@@ -1991,7 +2070,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var stp = e.shiftKey ? (state.cell || 1) : 0.25;
       hKey = 'nudge:' + it.id;
       it.x = clamp(Math.round((it.x + dirs[e.key][0] * stp) * 100) / 100, 0, state.w);
-      it.y = clamp(Math.round((it.y + dirs[e.key][1] * stp) * 100) / 100, 0, state.h);
+      it.y = fitY(Math.round((it.y + dirs[e.key][1] * stp) * 100) / 100, dirs[e.key][1]);
       render();
     }
   });
@@ -2065,8 +2144,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       function doLoad(){
         var c = JSON.parse(JSON.stringify(lay));
         state.w = c.w; state.h = c.h; state.items = c.items; state.sel = null; state.vis = Object.assign({}, state.vis, c.vis || {});
-        ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view','gapOn','gap'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
+        ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view','gapOn','gap','stripOn','strip','stripSep'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
         if(c.gapOn === undefined) state.gapOn = false;
+        if(c.stripOn === undefined) state.stripOn = false;
         state.nextId = Math.max(state.nextId, state.items.reduce(function(m,x){ return Math.max(m,x.id); },0)+1);
         render();
         offerLayoutPlants(lay.name, c.tpls);
@@ -2096,7 +2176,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!name){ $('tplName').focus(); return; }
     state.layouts = state.layouts || [];
     var snap = {name:name, w:state.w, h:state.h, vis:JSON.parse(JSON.stringify(state.vis)), items:JSON.parse(JSON.stringify(state.items))};
-    ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view','gapOn','gap'].forEach(function(k){ if(state[k] !== undefined) snap[k] = state[k]; });
+    ['cell','major','scale','commonNames','compass','north','opacity','autoOrder','view','gapOn','gap','stripOn','strip','stripSep'].forEach(function(k){ if(state[k] !== undefined) snap[k] = state[k]; });
     var i = state.layouts.findIndex(function(l){ return l.name === name; });
     if(i >= 0) state.layouts[i] = snap; else state.layouts.push(snap);
     save(); renderLayouts(); say('Saved “'+name+'”');

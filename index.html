@@ -70,6 +70,7 @@ button{cursor:pointer}
 .btn{padding:8px 12px;border-radius:8px;border:1px solid var(--ctl);background:transparent;font-size:13px}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
+#cfAlt[hidden]{display:none}
 a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible,.btn:focus-visible,.plant:focus-visible,.x:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.sw:focus-visible,.pat:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 label,.lab{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input[type=text],input[type=number],input[type=email],select,textarea{font:inherit;resize:vertical;width:100%;padding:8px;border:1px solid var(--ctl);border-radius:8px;background:var(--field)}
@@ -238,6 +239,12 @@ body .dia input[type=number]{width:68px;padding:4px 6px}
 .key{margin-top:12px;border-top:1px solid var(--line);padding-top:12px;display:grid;grid-template-columns:repeat(var(--kc,2),minmax(0,1fr));gap:0 28px;align-items:start}
 .phk{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:minmax(120px,max-content) 14px minmax(0,1fr);column-gap:8px;row-gap:5px;align-items:center;font-size:12px}
 .phk[hidden]{display:none}
+.phk{position:relative}
+.phk .phov{position:absolute;pointer-events:none;display:none}
+.phk .phov.on{display:block}
+.phk .phov i{position:absolute;top:0;bottom:0;background:var(--panel);opacity:.62}
+.phk .phov b{position:absolute;top:-3px;bottom:-3px;border:1.5px solid var(--ink);border-radius:4px}
+.phk .pm span.on{color:var(--ink);font-weight:600}
 .phk .pm{grid-column:3;display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:#a3a3a3;text-align:center}
 .phk .pnm{grid-column:1;text-align:right;line-height:1.25;min-width:0;overflow-wrap:anywhere}
 .phk .pi{display:grid;grid-template-rows:repeat(3,12px);row-gap:1px;align-items:center;justify-items:center}
@@ -738,6 +745,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     <section class="logu">
       <h3>November 17, 2026 update</h3>
       <ul>
+        <li><span class="ltag feature">feature</span><span>With phenology charts on, hover over a month to highlight it across every plant.</span></li>
+        <li><span class="ltag feature">feature</span><span>After loading a layout, you can now replace your Add a plant menu with the layout’s plants instead of adding them to it.</span></li>
         <li><span class="ltag note">note</span><span>The planting diagram has a lighter grid background with slightly darker grid lines, so the symbols stand out.</span></li>
       </ul>
     </section>
@@ -808,7 +817,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   <div class="dh"><h2 id="cfTitle">Please confirm</h2></div>
   <div class="db" style="padding-top:12px">
     <p id="cfMsg"></p>
-    <div class="row" style="margin-top:16px"><button class="btn danger" id="cfYes">Confirm</button><button class="btn" id="cfNo">Cancel</button></div>
+    <div class="row" style="margin-top:16px"><button class="btn danger" id="cfYes">Confirm</button><button class="btn" id="cfAlt" hidden>Other</button><button class="btn" id="cfNo">Cancel</button></div>
   </div>
 </dialog>
 <dialog id="exportDlg" aria-labelledby="expTitle" style="width:min(480px,94vw)">
@@ -2072,8 +2081,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       // circles on an unchecked layer are locked: clicks pass through them, so they can't be dragged or selected
       if(hidden){ g.setAttribute('pointer-events', 'none'); g.setAttribute('aria-disabled', 'true'); }
       if(state.view === 'planting'){
-        g.appendChild(el('circle',{cx:it.x*S,cy:it.y*S,r:16,fill:'#000','fill-opacity':0}));
-        iconParts(icons[plantKey(it)], it.color, it.x*S, it.y*S, 11).forEach(function(n){ g.appendChild(n); });
+        g.appendChild(el('circle',{cx:it.x*S,cy:it.y*S,r:18,fill:'#000','fill-opacity':0}));
+        iconParts(icons[plantKey(it)], it.color, it.x*S, it.y*S, 13).forEach(function(n){ g.appendChild(n); });
       } else {
       g.appendChild(el('circle',{cx:it.x*S,cy:it.y*S,r:it.d*S/2,fill:fillFor(it),stroke:'rgba(0,0,0,.5)','stroke-width':1.5,opacity:(state.opacity === undefined ? 0.88 : state.opacity)}));
       var fs = it.fs || autoFs(it), lines = it.label.split('\n').slice(0,2);
@@ -2110,7 +2119,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   function drawSel(){
     var old = svg.querySelector('#selring'); if(old) old.remove();
     var it = cur(); if(!it) return;
-    svg.appendChild(el('circle',{id:'selring',cx:it.x*S,cy:it.y*S,r:(state.view === 'planting' ? 19 : it.d*S/2+4),fill:'none',stroke:'var(--ink)','stroke-width':2.5,'stroke-dasharray':'6 4','pointer-events':'none'}));
+    svg.appendChild(el('circle',{id:'selring',cx:it.x*S,cy:it.y*S,r:(state.view === 'planting' ? 21 : it.d*S/2+4),fill:'none',stroke:'var(--ink)','stroke-width':2.5,'stroke-dasharray':'6 4','pointer-events':'none'}));
   }
 
   function renderEditor(){
@@ -2197,9 +2206,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     state.items.push(c); state.sel = c.id; render();
   };
   var cfDlg = $('confirmDlg'), cfCb = null;
-  function ask(title, msg, yes, cb){ $('cfTitle').textContent = title; $('cfMsg').textContent = msg; $('cfYes').textContent = yes; cfCb = cb; cfDlg.showModal(); $('cfNo').focus(); }
+  var cfAltCb = null;
+  // alt (optional): a second choice shown beside the main one, as {label, cb}
+  function ask(title, msg, yes, cb, alt){ $('cfTitle').textContent = title; $('cfMsg').textContent = msg; $('cfYes').textContent = yes; cfCb = cb; cfAltCb = alt ? alt.cb : null; $('cfAlt').hidden = !alt; if(alt) $('cfAlt').textContent = alt.label; cfDlg.showModal(); $('cfNo').focus(); }
+  $('cfAlt').onclick = function(){ var f = cfAltCb; cfCb = null; cfAltCb = null; cfDlg.close(); if(f) f(); };
   $('cfYes').onclick = function(){ var f = cfCb; cfCb = null; cfDlg.close(); if(f) f(); };
-  $('cfNo').onclick = function(){ cfCb = null; cfDlg.close(); };
+  $('cfNo').onclick = function(){ cfCb = null; cfAltCb = null; cfDlg.close(); };
   cfDlg.addEventListener('click', function(e){ if(e.target === cfDlg){ cfCb = null; cfDlg.close(); } });
   $('clear').onclick = function(){
     if(!state.items.length) return;
@@ -2257,7 +2269,25 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     save();
     if(!missing.length) return;
     var n = missing.length, label = n === 1 ? '1 plant' : n + ' plants';
-    ask('Add plants to your menu?', 'Append ' + label + ' from ' + qn(layoutName) + ' to your Add a plant menu? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
+    // every plant in the layout, in the layout's own order, for "Replace current plants"
+    function layoutTpls(){
+      var all = [], groups = {};
+      state.items.forEach(function(it){ var key = it.src || ('name:' + plantName(it)); if(!groups[key]){ groups[key] = []; all.push(key); } groups[key].push(it); });
+      if(srcTpls){ var ps = function(key){ var k = srcTpls.findIndex(function(t){ return t.id === key; }); return k < 0 ? 1e9 : k; }; all.sort(function(a, b){ return ps(a) - ps(b); }); }
+      return all.map(function(key){
+        var group = groups[key], first = group[0];
+        var given = (srcTpls || []).filter(function(t){ return t.id === first.src; })[0];
+        var t = given ? JSON.parse(JSON.stringify(given)) : (state.tpls.filter(function(x){ return x.id === first.src; })[0] ? JSON.parse(JSON.stringify(state.tpls.filter(function(x){ return x.id === first.src; })[0])) : {id: first.src || uid(), label:first.label, menu:first.menu || '', d:first.d, color:first.color, pattern:first.pattern, layer:first.layer, fs:first.fs || null, ital:first.ital || null});
+        if(!LAYERS.some(function(l){ return l[0] === t.layer; })) t.layer = 'herb';
+        group.forEach(function(it){ it.src = t.id; });
+        return t;
+      });
+    }
+    function replacePlants(){
+      var list = layoutTpls(); state.tpls = list; render();
+      menuNote('Replaced your menu with the ' + (list.length === 1 ? '1 plant' : list.length + ' plants') + ' in ' + qn(layoutName) + '.');
+    }
+    ask('Add plants to your menu?', 'Append ' + label + ' from ' + qn(layoutName) + ' to your Add a plant menu, or replace your current menu with this layout’s plants? They’re on the block plan but not in your menu yet. Adding them lets you place more of them and use Update saved plant.', 'Append ' + label, function(){
       missing.forEach(function(key){
         var group = seen[key], first = group[0];
         var given = (srcTpls || []).filter(function(t){ return t.id === first.src; })[0];
@@ -2268,7 +2298,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       });
       render();
       menuNote('Added ' + label + ' from ' + qn(layoutName) + ' to your menu.');
-    });
+    }, {label:'Replace current plants', cb:replacePlants});
   }
   // ---- saved layouts ----
   // built-in layouts from the Native Plant Salvage Foundation: always listed, can't be deleted
@@ -2432,6 +2462,29 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     return out;
   }
   function phSegs(r){ return !r || !r.length ? [] : (Array.isArray(r[0][0]) ? r : [r]); }
+  // hovering a month column boxes it and fades the other months
+  (function(){
+    var box = $('phenoKey');
+    function hide(){ var o = box.querySelector('.phov'); if(o) o.classList.remove('on'); box.querySelectorAll('.pm span.on').forEach(function(x){ x.classList.remove('on'); }); }
+    box.addEventListener('pointerleave', hide);
+    box.addEventListener('pointermove', function(e){
+      var bands = box.querySelectorAll('.pb'), m = box.querySelector('.pm');
+      if(!bands.length || !m){ hide(); return; }
+      var kb = box.getBoundingClientRect(), first = bands[0].getBoundingClientRect(), last = bands[bands.length-1].getBoundingClientRect(), mr = m.getBoundingClientRect();
+      if(e.clientX < first.left || e.clientX > first.right || e.clientY < mr.top || e.clientY > last.bottom){ hide(); return; }
+      var cw = first.width / 12, col = Math.min(11, Math.max(0, Math.floor((e.clientX - first.left) / cw)));
+      var o = box.querySelector('.phov');
+      if(!o){ o = document.createElement('div'); o.className = 'phov'; o.innerHTML = '<i class="l"></i><i class="r"></i><b></b>'; box.appendChild(o); }
+      var top = mr.top - kb.top, h = last.bottom - mr.top, left = first.left - kb.left;
+      o.style.left = left + 'px'; o.style.top = top + 'px'; o.style.width = first.width + 'px'; o.style.height = h + 'px';
+      var l = o.querySelector('.l'), r = o.querySelector('.r'), bx = o.querySelector('b');
+      l.style.left = '0'; l.style.width = (col * cw) + 'px'; l.style.top = (mr.height) + 'px';
+      r.style.left = ((col + 1) * cw) + 'px'; r.style.right = '0'; r.style.top = (mr.height) + 'px';
+      bx.style.left = (col * cw - 1) + 'px'; bx.style.width = (cw + 2) + 'px';
+      o.classList.add('on');
+      m.querySelectorAll('span').forEach(function(x, k){ x.classList.toggle('on', k === col); });
+    });
+  })();
   function renderPheno(){
     var box = $('phenoKey'); box.innerHTML = '';
     var list = state.phenoOn === true ? phenoList() : [];

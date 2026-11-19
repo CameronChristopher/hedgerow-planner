@@ -246,6 +246,15 @@ body .dia input[type=number]{width:68px;padding:4px 6px}
 .phk .phov i{position:absolute;top:0;bottom:0;background:var(--panel);opacity:.62}
 .phk .phov b{position:absolute;top:-3px;bottom:-3px;border:1.5px solid var(--ink);border-radius:4px}
 .phk .pm span.on{color:var(--ink);font-weight:600}
+.phk .pf{grid-column:1 / -1;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.phk .pf .pfl{font-size:12px;color:var(--muted);margin-right:2px}
+.phk .pf .btn{display:inline-flex;align-items:center;gap:7px;padding:7px 14px 7px 12px;font-size:13px;color:var(--ink)}
+.phk .pf .btn svg{width:14px;height:14px;fill:currentColor}
+.phk .pf .btn[aria-pressed="false"]{color:var(--muted);border-color:var(--line);box-shadow:none}
+.phk .pf .btn[aria-pressed="false"] span{text-decoration:line-through}
+.phk .pf .btn[aria-pressed="false"] svg{opacity:.45}
+.phk .pr,.phk .pi span{transition:opacity .15s}
+.phk .pr.off,.phk .pi span.off{opacity:.15}
 .phk .pm{grid-column:3;display:grid;grid-template-columns:repeat(12,1fr);font-size:11px;color:#a3a3a3;text-align:center}
 .phk .pnm{grid-column:1;text-align:right;line-height:1.25;min-width:0;overflow-wrap:anywhere}
 .phk .pi{display:grid;grid-template-rows:repeat(3,12px);row-gap:1px;align-items:center;justify-items:center}
@@ -547,9 +556,9 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       <span id="zoomVal"></span>
       <button class="btn" id="zFit">Fit to panel</button>
     </div>
+    <p class="hint">Drag to move (hold Shift to snap). Arrow keys nudge the selected circle (Shift for a full grid square), Delete removes it. Ctrl+scroll zooms.</p>
     <div class="key" id="key" aria-label="Diagram key"></div>
     <div class="phk" id="phenoKey" aria-label="Flower, foliage and fruit by month" hidden></div>
-    <p class="hint">Drag to move (hold Shift to snap). Arrow keys nudge the selected circle (Shift for a full grid square), Delete removes it. Ctrl+scroll zooms.</p>
   </main>
 </div>
 <dialog id="about" aria-labelledby="aboutTitle">
@@ -2492,6 +2501,17 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     var list = state.phenoOn === true ? phenoList() : [];
     box.hidden = !list.length;
     if(!list.length) return;
+    // Flower / Foliage / Fruit buttons: a key for the row icons that also fades rows in or out
+    var off = state.phOff || [false, false, false];
+    var pf = document.createElement('div'); pf.className = 'pf'; pf.setAttribute('role', 'group'); pf.setAttribute('aria-label', 'Show rows');
+    var pfl = document.createElement('span'); pfl.className = 'pfl'; pfl.textContent = 'Show:'; pf.appendChild(pfl);
+    PH_ICONS.forEach(function(ic, k){
+      var bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn'; bt.setAttribute('aria-pressed', off[k] ? 'false' : 'true');
+      bt.title = (off[k] ? 'Show ' : 'Fade ') + ic[0].toLowerCase() + ' rows';
+      bt.innerHTML = ic[1]; var lb = document.createElement('span'); lb.textContent = ic[0]; bt.appendChild(lb);
+      bt.onclick = function(){ var o = (state.phOff || [false, false, false]).slice(); o[k] = !o[k]; state.phOff = o; save(); renderPheno(); var nb = $('phenoKey').querySelectorAll('.pf .btn')[k]; if(nb) nb.focus(); };
+      pf.appendChild(bt);
+    });
     var m = document.createElement('div'); m.className = 'pm'; m.setAttribute('aria-hidden', 'true');
     PH_MONTHS.forEach(function(t){ var sp = document.createElement('span'); sp.textContent = t; m.appendChild(sp); });
     box.appendChild(m);
@@ -2500,8 +2520,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       var ic = document.createElement('div'); ic.className = 'pi'; box.appendChild(ic);
       var bands = document.createElement('div'); bands.className = 'pb'; box.appendChild(bands);
       e.rows.forEach(function(r, k){
-        var sp = document.createElement('span'); sp.title = PH_ICONS[k][0]; sp.innerHTML = PH_ICONS[k][1]; ic.appendChild(sp);
-        var band = document.createElement('div'); band.className = 'pr'; band.setAttribute('role', 'img'); band.setAttribute('aria-label', PH_ICONS[k][0]); bands.appendChild(band);
+        var sp = document.createElement('span'); sp.title = PH_ICONS[k][0]; sp.innerHTML = PH_ICONS[k][1]; if(off[k]) sp.className = 'off'; ic.appendChild(sp);
+        var band = document.createElement('div'); band.className = 'pr' + (off[k] ? ' off' : ''); band.setAttribute('role', 'img'); band.setAttribute('aria-label', PH_ICONS[k][0]); bands.appendChild(band);
         phSegs(r).forEach(function(st){
           var a = st[0][0], b = st[st.length-1][0], span = b - a; if(!(span > 0)) return;
           var bar = document.createElement('i');
@@ -2512,6 +2532,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         });
       });
     });
+    box.appendChild(pf);
   }
   // the same charts as SVG, for PNG/PDF export
   function exportPheno(x0, y0, width){
@@ -2529,7 +2550,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       ws.forEach(function(o, k){ var part = el('tspan', o.i ? {'font-style':'italic'} : {}); part.textContent = (k ? ' ' : '') + o.w; t.appendChild(part); });
       g.appendChild(t);
       e.rows.forEach(function(r, k){
-        var ry = y + k*(RH + RG);
+        var ry = y + k*(RH + RG), offR = (state.phOff || [])[k], g0 = g;
+        if(offR){ g = el('g',{opacity:0.15}); g0.appendChild(g); }
         g.appendChild(el('rect',{x:bx, y:ry, width:bw, height:RH, fill:GREY[k]}));
         for(var c = 1; c < 12; c++) g.appendChild(el('rect',{x:bx + c*cw - 0.5, y:ry, width:1, height:RH, fill:'#ffffff'}));
         phSegs(r).forEach(function(st){
@@ -2539,6 +2561,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
           defs.appendChild(lg);
           g.appendChild(el('rect',{x:bx + a*cw, y:ry, width:span*cw, height:RH, fill:'url(#'+id+')'}));
         });
+        g = g0;
       });
       y += blockH + PG;
     });

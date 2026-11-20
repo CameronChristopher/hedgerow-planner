@@ -72,6 +72,10 @@ button{cursor:pointer}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
 #cfAlt[hidden]{display:none}
+.selerr{margin:12px 0 0;font-size:13px;color:var(--danger)}
+.selerr[hidden]{display:none}
+#fields .bad{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger)}
+#menuLbl::placeholder,#lbl::placeholder{color:#b3b3b3;opacity:1}
 a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible,.btn:focus-visible,.plant:focus-visible,.x:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.sw:focus-visible,.pat:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 label,.lab{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
 input[type=text],input[type=number],input[type=email],select,textarea{font:inherit;resize:vertical;width:100%;padding:8px;border:1px solid var(--ctl);border-radius:8px;background:var(--field)}
@@ -445,9 +449,9 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       <p class="sub" id="noSel">Click a circle to edit it.</p>
       <div id="fields" hidden>
         <label for="menuLbl" style="margin-top:0">Menu label (longer name shown in the plant menu)</label>
-        <input type="text" id="menuLbl" maxlength="80" placeholder="Same as display label">
+        <input type="text" id="menuLbl" maxlength="80" placeholder="Malus fusca (Pacific Crabapple)">
         <label for="lbl">Display label (shown on the circle, up to 2 lines)</label>
-        <textarea id="lbl" rows="2" maxlength="40"></textarea>
+        <textarea id="lbl" rows="2" maxlength="40" placeholder="MAL&#10;FUS"></textarea>
         <label for="fs">Text size</label>
         <div class="dia"><input type="range" id="fs" min="8" max="40" step="1"><input type="number" id="fsNum" min="6" max="80" aria-label="Text size"></div>
         <label class="chk" style="color:var(--ink)"><input type="checkbox" id="fsAuto"> Auto-size to circle</label>
@@ -459,6 +463,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <div class="swatches" id="sw"></div>
         <span class="lab">Pattern</span>
         <div class="pats" id="pats"></div>
+        <p class="selerr" id="selErr" role="alert" hidden></p>
         <div class="row" style="margin-top:14px">
           <button class="btn primary" id="updTpl" hidden>Update saved plant</button>
           <button class="btn primary" id="saveTpl">Save to plant menu</button>
@@ -1193,7 +1198,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     if(!state.prefs.usedCustom){ state.prefs.usedCustom = true; this.classList.remove('primary'); }
     // next colour + pattern not yet used in the plant menu (or by another unsaved custom circle)
     var nc = nextCombo(true);
-    addItem({label:'Custom', d:(state.prefs.dia > 0 ? state.prefs.dia : 3), color:nc[0], pattern:nc[1], layer:'small'});
+    addItem({label:'', menu:'', d:(state.prefs.dia > 0 ? state.prefs.dia : 3), color:nc[0], pattern:nc[1], layer:'small'});
   };
   function tplData(it){ return {label:it.label, d:it.d, color:it.color, pattern:it.pattern, layer:it.layer, fs:it.fs||null, menu:it.menu||'', ital:it.ital||null}; }
   // a short status line under Add a plant that clears itself
@@ -1204,8 +1209,22 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     noteT = setTimeout(function(){ m.classList.add('gone'); setTimeout(function(){ if(m.classList.contains('gone')) m.textContent = ''; }, 400); }, 6000);
   }
   function flash(id, txt){ $(id).textContent = txt; setTimeout(renderEditor, 1300); }
+  // both labels are needed before a circle can become a plant in the menu
+  function labelsMissing(){
+    var miss = [];
+    [['menuLbl', 'a menu label'], ['lbl', 'a display label']].forEach(function(f){
+      var bad = !$(f[0]).value.trim(); $(f[0]).classList.toggle('bad', bad); if(bad) miss.push(f[1]);
+    });
+    var e = $('selErr');
+    if(miss.length){ e.textContent = 'Please enter ' + miss.join(' and ') + ' before saving.'; e.hidden = false; $(miss[0] === 'a menu label' ? 'menuLbl' : 'lbl').focus(); }
+    else e.hidden = true;
+    return miss.length > 0;
+  }
+  function clearLabelErr(){ ['menuLbl', 'lbl'].forEach(function(id){ $(id).classList.remove('bad'); }); $('selErr').hidden = true; }
+  ['menuLbl', 'lbl'].forEach(function(id){ $(id).addEventListener('input', function(){ if(this.value.trim()){ this.classList.remove('bad'); if(!document.querySelector('#fields .bad')) $('selErr').hidden = true; } }); });
   $('saveTpl').onclick = function(){
     var it = cur(); if(!it) return;
+    if(labelsMissing()) return;
     var t = tplData(it); t.id = uid(); state.tpls.push(t); it.src = t.id;
     renderMenu(); save(); renderEditor(); flash('saveTpl','Saved ✓');
   };
@@ -1375,7 +1394,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     return t;
   }
   function keyName(it){
-    var t = (it.menu || it.label).replace(/\n/g, ' ');
+    var t = (it.menu || it.label || 'Unnamed plant').replace(/\n/g, ' ');
     return state.commonNames === true ? t : stripCommon(t);
   }
   function keyWidth(){ var b = $('key'); return b.clientWidth || (b.parentNode.clientWidth - 32) || 600; }
@@ -1621,7 +1640,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     }
     return out;
   }
-  function fullName(it){ return String(it.menu || it.label || '').replace(/\s+/g, ' ').trim(); }
+  function fullName(it){ return String(it.menu || it.label || 'Unnamed plant').replace(/\s+/g, ' ').trim(); }
   // write a label into an element with the Latin parts in <i>
   function appendSci(el, text, ital, full){
     sciWords(text, ital, full).forEach(function(o, k){
@@ -2141,8 +2160,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     svg.appendChild(el('circle',{id:'selring',cx:it.x*S,cy:it.y*S,r:(state.view === 'planting' ? 21 : it.d*S/2+4),fill:'none',stroke:'var(--ink)','stroke-width':2.5,'stroke-dasharray':'6 4','pointer-events':'none'}));
   }
 
+  var edSel = null;
   function renderEditor(){
     var it = cur();
+    if(state.sel !== edSel){ edSel = state.sel; clearLabelErr(); }
     $('selBox').hidden = !it; $('fields').hidden = !it; $('noSel').hidden = !!it;
     if(!it) return;
     if(document.activeElement !== $('lbl')) $('lbl').value = it.label;

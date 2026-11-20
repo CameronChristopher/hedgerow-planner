@@ -868,7 +868,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   var state = {w:20, h:15, items:[], sel:null, nextId:1, tpls:[], vis:{trees:true,large:true,small:true,herb:true}};
   try{ var s = JSON.parse(localStorage.getItem(KEY)||'null'); if(s && s.items){ state = s; } }catch(e){}
   state.prefs = state.prefs || {auto:false, fs:14};
-  state.view = state.view || 'spacing'; state.icons = state.icons || {};
+  state.view = 'spacing'; state.icons = state.icons || {};
   state.tpls = state.tpls || [];
   function uid(){ return 't'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
   state.seeded = true; // new plans start with an empty plant menu
@@ -2368,7 +2368,8 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       function doLoad(){
         var c = JSON.parse(JSON.stringify(lay));
         state.w = c.w; state.h = c.h; state.items = c.items; state.sel = null; state.vis = Object.assign({}, state.vis, c.vis || {});
-        ['cell','major','scale','commonNames','phenoOn','compass','north','opacity','autoOrder','view','gapOn','gap','stripOn','strip','stripSep'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
+        ['cell','major','scale','commonNames','phenoOn','compass','north','opacity','autoOrder','gapOn','gap','stripOn','strip','stripSep'].forEach(function(k){ if(c[k] !== undefined) state[k] = c[k]; });
+        state.view = 'spacing';
         if(c.gapOn === undefined) state.gapOn = false;
         if(c.stripOn === undefined) state.stripOn = false;
         // built-in layouts can choose the planting symbol for each of their plants
@@ -2469,7 +2470,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
         var keep = {split:state.prefs && state.prefs.side};
         state = Object.assign({vis:{trees:true,large:true,small:true,herb:true}, tpls:[], layouts:[], icons:{}, prefs:{auto:false, fs:14}}, p);
         if(keep.split && !state.prefs.side) state.prefs.side = keep.split;
-        state.sel = null; state.seeded = true; state.view = state.view || 'spacing';
+        state.sel = null; state.seeded = true; state.view = 'spacing';
         state.tpls.forEach(function(t){ if(!t.id) t.id = uid(); });
         migratePatterns(); syncLayers();
         state.nextId = Math.max(state.nextId || 1, state.items.reduce(function(m, x){ return Math.max(m, x.id); }, 0) + 1);

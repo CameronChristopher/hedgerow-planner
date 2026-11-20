@@ -462,7 +462,6 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <div class="row" style="margin-top:14px">
           <button class="btn primary" id="updTpl" hidden>Update saved plant</button>
           <button class="btn primary" id="saveTpl">Save to plant menu</button>
-          <button class="btn" id="dup">Duplicate</button>
           <button class="btn danger" id="del">Delete</button>
         </div>
       </div>
@@ -1192,7 +1191,9 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   if(!state.prefs.usedCustom) $('addCustom').classList.add('primary');
   $('addCustom').onclick = function(){
     if(!state.prefs.usedCustom){ state.prefs.usedCustom = true; this.classList.remove('primary'); }
-    addItem({label:'Custom', d:3, color:'#117733', pattern:'dots', layer:'small'});
+    // next colour + pattern not yet used in the plant menu (or by another unsaved custom circle)
+    var nc = nextCombo(true);
+    addItem({label:'Custom', d:(state.prefs.dia > 0 ? state.prefs.dia : 3), color:nc[0], pattern:nc[1], layer:'small'});
   };
   function tplData(it){ return {label:it.label, d:it.d, color:it.color, pattern:it.pattern, layer:it.layer, fs:it.fs||null, menu:it.menu||'', ital:it.ital||null}; }
   // a short status line under Add a plant that clears itself
@@ -1907,9 +1908,10 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
     });
   }
   $('piClose').onclick = function(){ $('plantDlg').close(); };
-  function nextCombo(){
+  function nextCombo(withCustom){
     var used = {}, all = [];
     state.tpls.forEach(function(t){ used[String(t.color).toLowerCase() + '|' + t.pattern] = 1; });
+    if(withCustom) state.items.forEach(function(it){ if(!it.src || !state.tpls.some(function(t){ return t.id === it.src; })) used[String(it.color).toLowerCase() + '|' + it.pattern] = 1; });
     PATTERNS.forEach(function(p){ COLORS.forEach(function(c){ all.push([c[1], p[0]]); }); });
     for(var i = 0; i < all.length; i++){ if(!used[all[i][0].toLowerCase() + '|' + all[i][1]]) return all[i]; }
     return all[state.tpls.length % all.length];
@@ -2198,7 +2200,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   function setDia(v){
     var it = cur(); if(!it || !(v > 0)) return;
-    it.d = clamp(v, 0.25, 60);
+    it.d = clamp(v, 0.25, 60); state.prefs.dia = it.d;
     render();
   }
   $('lbl').oninput = function(){
@@ -2216,12 +2218,6 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   $('diaNum').onchange = function(){ var it = cur(); if(it) this.value = it.d; };
   $('layer').onchange = function(){ var it = cur(); if(!it) return; if(this.value === '__new'){ openLayerDlg(); return; } it.layer = this.value; render(); };
   $('del').onclick = function(){ state.items = state.items.filter(function(i){ return i.id !== state.sel; }); state.sel = null; render(); };
-  $('dup').onclick = function(){
-    var it = cur(); if(!it) return;
-    var c = JSON.parse(JSON.stringify(it)); c.id = state.nextId++;
-    c.x = clamp(it.x+0.5, 0, state.w); c.y = fitY(it.y+0.5);
-    state.items.push(c); state.sel = c.id; render();
-  };
   var cfDlg = $('confirmDlg'), cfCb = null;
   var cfAltCb = null;
   // alt (optional): a second choice shown beside the main one, as {label, cb}

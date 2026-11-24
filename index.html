@@ -106,6 +106,10 @@ svg#bed{width:100%;height:auto;display:block;border-radius:6px;touch-action:none
 .c text{pointer-events:none;font-family:inherit;font-weight:600;text-anchor:middle;fill:#1e1e1e;paint-order:stroke;stroke:rgba(255,255,255,.9);stroke-width:4px;stroke-linejoin:round}
 .hint{font-size:13px;color:var(--muted);margin:8px 2px 0;font-style:italic}
 .explain{font-style:italic}
+/* helper notes: a quiet callout so they read as guidance, not controls */
+.note{display:flex;gap:8px;align-items:flex-start;margin:0;padding:8px 10px;border-radius:6px;background:var(--field);color:var(--muted);font-size:12.5px;line-height:1.45;font-style:normal}
+.note::before{content:'';flex:none;width:14px;height:14px;margin-top:1px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.75' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3Crect x='7.25' y='7' width='1.5' height='4.5' rx='.75'/%3E%3Ccircle cx='8' cy='4.9' r='.95'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.75' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3Crect x='7.25' y='7' width='1.5' height='4.5' rx='.75'/%3E%3Ccircle cx='8' cy='4.9' r='.95'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.8}
+.hint.note{margin:10px 0 0;font-style:normal}
 .empty{fill:var(--muted);font-size:18px;text-anchor:middle;font-family:inherit}
 svg#bed{overflow:hidden;max-width:none;margin:0 auto}
 .c text{dominant-baseline:central}
@@ -452,7 +456,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       </div>
       <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
       <p class="sub" id="csvMsg" role="status" style="margin-top:8px"></p>
-      <p class="sub explain" style="margin-top:10px">Edit a circle, then save it to the menu to reuse it. Save plant list keeps this whole menu as a user preset you can pick from later.</p>
+      <p class="note" style="margin-top:12px">Edit a circle, then save it to the menu to reuse it. Save plant list keeps this whole menu as a user preset you can pick from later.</p>
     </div>
     <div class="box" id="selBox" hidden>
       <h2>Selected circle</h2>
@@ -495,7 +499,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
         <button class="btn ibtn quiet" id="planOpen"><svg class="ico" aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5M9 6.812a15 15 0 0 1 2.556-2.655A.7.7 0 0 1 12 4m3 2.812a15 15 0 0 0-2.556-2.655A.7.7 0 0 0 12 4m0 0v11"/></svg><svg class="ico folder-tpl" hidden aria-hidden="true" focusable="false" width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.961 9.997c-.289-.017-.647-.017-1.102-.017H8.445c-.875 0-1.313 0-1.68.151a2 2 0 0 0-.82.627c-.242.314-.357.736-.587 1.581L4.1 16.96c-.374 1.374-.561 2.061-.402 2.604a2 2 0 0 0 .963 1.192m16.3-10.758c.39.023.654.078.861.205.317.194.55.5.655.856.119.407-.021.922-.302 1.952l-.89 3.271c-.46 1.69-.69 2.535-1.175 3.163a4 4 0 0 1-1.64 1.253c-.733.303-1.61.303-3.36.303H7.187c-1.338 0-2.047 0-2.527-.245m16.3-10.758c-.047-.783-.155-1.339-.397-1.813a4 4 0 0 0-1.748-1.748C17.96 6 16.84 6 14.6 6h-1.316c-.47 0-.704 0-.917-.065a1.5 1.5 0 0 1-.517-.276c-.172-.142-.302-.337-.562-.728l-.575-.862c-.261-.391-.391-.586-.563-.728a1.5 1.5 0 0 0-.517-.276C9.42 3 9.185 3 8.716 3H8.4c-2.24 0-3.36 0-4.216.436a4 4 0 0 0-1.748 1.748C2 6.04 2 7.16 2 9.4v5.2c0 2.24 0 3.36.436 4.216a4 4 0 0 0 1.748 1.748q.224.114.477.19"/></svg>Open plan file</button>
         <input type="file" id="planFile" accept=".json,application/json" hidden>
       </div>
-      <p class="sub explain" id="planMsg" role="status" style="margin-top:8px">A plan file holds your block plan, plant menu and saved layouts, so you can back them up or move them to another computer.</p>
+      <p class="note" id="planMsg" role="status" style="margin-top:10px">A plan file holds your block plan, plant menu and saved layouts, so you can back them up or move them to another computer.</p>
     </div>
   </aside>
   <div class="split" id="split" role="separator" aria-orientation="vertical" aria-label="Resize the diagram panel" tabindex="0" title="Drag to resize. Double-click to reset."></div>
@@ -571,7 +575,7 @@ body.resizing{user-select:none;-webkit-user-select:none;cursor:col-resize}
       <span id="zoomVal"></span>
       <button class="btn" id="zFit">Fit to panel</button>
     </div>
-    <p class="hint">Drag to move (hold Shift to snap). Arrow keys nudge the selected circle (Shift for a full grid square), Delete removes it. Ctrl+scroll zooms.</p>
+    <p class="hint note">Drag to move (hold Shift to snap). Arrow keys nudge the selected circle (Shift for a full grid square), Delete removes it. Ctrl+scroll zooms.</p>
     <div class="key" id="key" aria-label="Diagram key"></div>
     <p class="kcount" id="count" aria-live="polite"></p>
     <div class="phk" id="phenoKey" aria-label="Flower, foliage and fruit by month" hidden></div>
@@ -768,6 +772,12 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
   </div>
   <div class="db" id="infoLog" role="tabpanel" aria-labelledby="infoTabLog" style="padding-top:6px" hidden>
     <p class="sub explain" style="margin-top:8px">What’s new and what’s changed in the planner, newest first.</p>
+    <section class="logu">
+      <h3>November 24, 2026 update</h3>
+      <ul>
+        <li><span class="ltag note">note</span><span>Helper notes now sit in their own light boxes so they’re easier to tell apart from the controls, and the ⓘ info tips open when you hover over them.</span></li>
+      </ul>
+    </section>
     <section class="logu">
       <h3>November 20, 2026 update</h3>
       <ul>
@@ -1341,17 +1351,32 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
       if(b === except) return; b.setAttribute('aria-expanded', 'false'); $(b.getAttribute('aria-controls')).hidden = true;
     });
   }
+  // opens on hover (or keyboard focus); a tap still toggles it on touch screens
   document.querySelectorAll('.tipbtn').forEach(function(b){
-    var box = $(b.getAttribute('aria-controls'));
+    var box = $(b.getAttribute('aria-controls')), hideT = null;
+    function show(){
+      clearTimeout(hideT);
+      if(b.getAttribute('aria-expanded') === 'true') return;
+      closeTips(b); b.setAttribute('aria-expanded', 'true'); box.hidden = false;
+      var br = b.getBoundingClientRect(), w = box.offsetWidth; // place it under the button, kept on screen
+      box.style.left = Math.max(12, Math.min(br.left, window.innerWidth - w - 12)) + 'px';
+      box.style.top = (br.bottom + 6) + 'px';
+    }
+    function hide(){ clearTimeout(hideT); b.setAttribute('aria-expanded', 'false'); box.hidden = true; }
+    function hideSoon(){ clearTimeout(hideT); hideT = setTimeout(hide, 150); }
+    b.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse') show(); });
+    b.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse') hideSoon(); });
+    box.addEventListener('pointerenter', function(e){ if(e.pointerType === 'mouse') clearTimeout(hideT); });
+    box.addEventListener('pointerleave', function(e){ if(e.pointerType === 'mouse') hideSoon(); });
+    b.addEventListener('focus', function(){ if(b.matches(':focus-visible')) show(); });
+    b.addEventListener('blur', function(){ hideSoon(); });
+    var lastPointer = '';
+    b.addEventListener('pointerdown', function(e){ lastPointer = e.pointerType; });
     b.addEventListener('click', function(e){
       e.preventDefault(); e.stopPropagation();
-      var open = b.getAttribute('aria-expanded') !== 'true';
-      closeTips(b); b.setAttribute('aria-expanded', open ? 'true' : 'false'); box.hidden = !open;
-      if(open){ // place it under the button, kept on screen
-        var br = b.getBoundingClientRect(), w = box.offsetWidth;
-        box.style.left = Math.max(12, Math.min(br.left, window.innerWidth - w - 12)) + 'px';
-        box.style.top = (br.bottom + 6) + 'px';
-      }
+      if(lastPointer === 'mouse'){ show(); lastPointer = ''; return; } // already open from hovering
+      lastPointer = '';
+      if(b.getAttribute('aria-expanded') === 'true') hide(); else show();
     });
   });
   document.addEventListener('click', function(e){ if(!e.target.closest('.tip')) closeTips(); });
@@ -2487,7 +2512,7 @@ Snowberry (deciduous with berries),Snowberry,12,4,Small shrubs</pre>
 
   // ---- export ----
   var msgT;
-  function say(t, tgt){ var m = $(tgt || 'msg'); m.textContent = t; clearTimeout(msgT); msgT = setTimeout(function(){ m.textContent = ''; }, 3000); }
+  function say(t, tgt){ var m = $(tgt || 'msg'); if(m.dataset.def === undefined) m.dataset.def = m.textContent; m.textContent = t; clearTimeout(msgT); msgT = setTimeout(function(){ m.textContent = m.dataset.def; }, 3000); }
   function fileBase(){ return ($('tplName').value.trim().replace(/[^\w\- ]+/g,'') || 'hedgerow-plan'); }
   function saveFile(filename, blob, tgt){
     var p = (window.claude && window.claude.use) ? window.claude.use('downloads') : Promise.resolve(null);
